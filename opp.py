@@ -368,8 +368,8 @@ if df is not None:
                 if not chapter_qna.empty:
                     st.write("---")
                     for idx, row in chapter_qna.iterrows():
-                        question_text = str(row.get('Question_Text', f"Qts {idx+1}"))
-                        answer_text = str(row.get('Answer_or_Hint', "Ans is not given."))
+                        question_text = str(row.get('Question_Text', f"प्रश्न {idx+1}"))
+                        answer_text = str(row.get('Answer_or_Hint', "उत्तर दिलेले नाही."))
                         
                         with st.expander(f"🔹 प्रश्न {idx+1}"):
                             lines = question_text.split('\n')
@@ -380,25 +380,36 @@ if df is not None:
                                     table_data.append([col.strip() for col in line.split('|')])
                                 else:
                                     if table_data:
-                                        tb_df = pd.DataFrame(table_data)
-                                        tb_df.fillna("", inplace=True)
-                                        st.table(tb_df)
+                                        # जादू: नको असलेले आकडे लपवण्यासाठी HTML टेबल
+                                        html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd;'>"
+                                        for t_row in table_data:
+                                            html_table += "<tr>"
+                                            for col in t_row:
+                                                html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
+                                            html_table += "</tr>"
+                                        html_table += "</table><br>"
+                                        st.markdown(html_table, unsafe_allow_html=True)
                                         table_data = [] 
                                     
                                     if line.strip():
                                         st.markdown(f"{line.strip()}")
                                         
                             if table_data:
-                                tb_df = pd.DataFrame(table_data)
-                                tb_df.fillna("", inplace=True)
-                                st.table(tb_df)
+                                html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd;'>"
+                                for t_row in table_data:
+                                    html_table += "<tr>"
+                                    for col in t_row:
+                                        html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
+                                    html_table += "</tr>"
+                                html_table += "</table><br>"
+                                st.markdown(html_table, unsafe_allow_html=True)
                                 
                             st.markdown("---")
-                            st.markdown(f"**Ans / Hint:** \n{answer_text}")
+                            st.markdown(f"**उत्तर / हिंट:** \n{answer_text}")
                 else:
-                    st.warning("⏳ The questions for this chapter will be updated soon! (Stay Tuned)")
+                    st.warning("⏳ या चॅप्टरचे प्रश्न लवकरच अपडेट केले जातील! (Stay Tuned)")
             else:
-                st.error("⚠️ QnA The data could not be loaded. Please check the file.")
+                st.error("⚠️ QnA डेटा लोड होऊ शकला नाही. कृपया फाईल तपासा.")
         # ==========================================
         # टॅब ४: पेपर्स आणि सोल्युशन्स (Papers & Solutions)
         # ==========================================
