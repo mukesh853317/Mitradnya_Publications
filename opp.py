@@ -8,7 +8,15 @@ import random
 import streamlit.components.v1 as components
 import re
 import os
-import google.generativeai as genai
+
+# ==========================================
+# 🛡️ AI Module Shield (ॲप क्रॅश होऊ नये म्हणून)
+# ==========================================
+try:
+    import google.generativeai as genai
+    AI_AVAILABLE = True
+except ModuleNotFoundError:
+    AI_AVAILABLE = False
 
 # -----------------------------------------------------
 # 1. Premium Access Setup & API Keys
@@ -33,7 +41,8 @@ except:
 # 🎯 Gemini AI Setup
 try:
     GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=GEMINI_API_KEY)
+    if AI_AVAILABLE:
+        genai.configure(api_key=GEMINI_API_KEY)
 except:
     GEMINI_API_KEY = ""
 
@@ -303,7 +312,6 @@ if df is not None:
                         main_title = str(first_row.get('Question_Text', ''))
                         display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
                         
-                        # पूर्ण प्रश्न AI ला पाठवण्यासाठी एकत्र करणे
                         full_question_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                         
                         with st.expander(f" Q {q_idx + 1}: {display_title}"):
@@ -352,8 +360,10 @@ if df is not None:
                             # 🎯 Tally-like AI Solution Generator Button
                             st.markdown("---")
                             if st.button(f"🧠 Generate AI Solution (Tally Format)", key=f"btn_ai_{selected_chapter}_{q_idx}"):
-                                if not GEMINI_API_KEY:
-                                    st.error("⚠️ Gemini API Key is missing! Please add 'GEMINI_API_KEY' in Streamlit Secrets to use this feature.")
+                                if not AI_AVAILABLE:
+                                    st.error("⚠️ AI Module 'google-generativeai' is not installed correctly in the Cloud. Please check the spelling in 'requirements.txt'.")
+                                elif not GEMINI_API_KEY:
+                                    st.error("⚠️ Gemini API Key is missing! Please add 'GEMINI_API_KEY' in Streamlit Secrets.")
                                 else:
                                     with st.spinner("⏳ AI is calculating and generating Trading, P&L, and Balance Sheet... (This may take 10-15 seconds)"):
                                         try:
@@ -378,7 +388,6 @@ if df is not None:
                                         except Exception as e:
                                             st.error(f"❌ AI Generation Failed: {e}")
                                             
-                            # जर आधीपासून CSV मध्ये उत्तर असेल तर ते दाखवा
                             if answer_text:
                                 st.markdown(f"**Manual Hint / Note:** \n{answer_text}")
 
