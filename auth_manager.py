@@ -20,7 +20,7 @@ def check_login():
                 </style>
                 <div class="login-box">
                     <h2 style='text-align: center; color: #4F46E5;'>📚 Mitradnya Publication's Portal 📚</h2>
-                    <p style='text-align: center;'>🙏 WELCOM 🙏, <br> Please login.</p></br>
+                    <p style='text-align: center;'>WELCOM,<br>TO</br>,<br>MITRADNYA PUBLICATIONS</br>.</p></br>
                 </div>
             """, unsafe_allow_html=True)
             
