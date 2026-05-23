@@ -8,43 +8,199 @@ import random
 import streamlit.components.v1 as components
 import re
 import os
-import google.generativeai as genai
 
-# Page Config
+# ==========================================
+# 🛡️ AI Module Shield (ॲप क्रॅश होऊ नये म्हणून)
+# ==========================================
+try:
+    import google.generativeai as genai
+    AI_AVAILABLE = True
+except ModuleNotFoundError:
+    AI_AVAILABLE = False
+
+# -----------------------------------------------------
+# 1. Premium Access Setup & API Keys
+# -----------------------------------------------------
+VALID_KEYS = ["MITRADNYA-101", "MUKESH-PRO-2026", "VIP-STUDENT-99"]
+
+# --- Page Config नेहमी सर्वात वर असावे ---
 st.set_page_config(page_title="📚 Mitradnya Publication's Online Exam 📚", page_icon="📝", layout="centered")
 
-# Authentication and State
-if 'is_authenticated' not in st.session_state: st.session_state.is_authenticated = False
-if 'test_status' not in st.session_state: st.session_state.test_status = 'not_started'
+if 'is_authenticated' not in st.session_state:
+    st.session_state.is_authenticated = False
 
-# API Key Config
+# -----------------------------------------------------
+# 2. Mitradnya Publication - Setup
+# -----------------------------------------------------
+TEACHER_EMAIL = "vidyarthi.mitradnyapublications@gmail.com" 
 try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    EMAIL_PASSWORD = st.secrets["EMAIL_PASSWORD"]
 except:
-    pass
+    EMAIL_PASSWORD = "" 
 
-# Data Loading
+# 🎯 Gemini AI Setup
+try:
+    GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY")
+    if not GEMINI_API_KEY:
+        st.error("❌ Key is empty in Secrets!")
+    if AI_AVAILABLE:
+        # हे कोडमध्ये असं अपडेट करा:
+        genai.configure(api_key=GEMINI_API_KEY, api_version='v1')
+except:
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") # जर Secrets सापडले नाही तर सर्व्हर वरून उचल
+
+TEACHER_NAME = "Mitradnya Publication's"
+SECRET_EXAM_PIN = "MIT2026" 
+
 @st.cache_data
-def load_all_data():
+def load_data():
     try:
-        df = pd.read_csv('All in one.csv').fillna("None")
-        qna_df = pd.read_csv('QnA.csv').fillna("")
-        qna_df['Chapter_Name'] = qna_df['Chapter_Name'].ffill()
-        qna_df['Category'] = qna_df['Category'].ffill()
-        return df, qna_df
-    except:
-        return None, None
+        try:
+            df = pd.read_csv('All in one.csv', encoding='utf-8')
+        except UnicodeDecodeError:
+            df = pd.read_csv('All in one.csv', encoding='cp1252')
+        df.columns = df.columns.str.strip()
+        df.fillna("None", inplace=True) 
+        return df
+    except Exception as e:
+        st.error(f"Error loading CSV file: {e}")
+        return None
 
-df, qna_df = load_all_data()
+df = load_data()
 
-# App Layout
-st.sidebar.markdown("## 📚 Mitradnya Publication's")
+@st.cache_data
+def load_qna_data():
+    try:
+        try:
+            qna_df = pd.read_csv('QnA.csv', encoding='utf-8', on_bad_lines='skip')
+        except Exception:
+            qna_df = pd.read_csv('QnA.csv', encoding='cp1252', on_bad_lines='skip')
+        
+        qna_df.columns = qna_df.columns.str.strip()
+        qna_df = qna_df.astype(object)
+        
+        qna_df.replace(r'^\s*$', pd.NA, regex=True, inplace=True)
+        qna_df['Question_Start'] = qna_df['Chapter_Name'].notna()
+        qna_df['Question_ID'] = qna_df['Question_Start'].cumsum()
+        qna_df['Chapter_Name_Filled'] = qna_df['Chapter_Name'].ffill()
+        
+        qna_df.fillna("", inplace=True)
+        return qna_df
+    except Exception as e:
+        st.error(f"🔍 Technical Error Details: {e}")
+        return None
+
+qna_df = load_qna_data()
+
+def send_detailed_email(receiver_email, student_name, div, roll, score, total, chapter, test_name, report_content, is_teacher=True):
+    if is_teacher:
+        subject = f"New Result: {student_name} ({div}-{roll}) - {score}/{total}"
+        body = f"📚 Result Alert for Mitradnya Publication's!\n\nStudent: {student_name}\nDivision: {div}\nRoll No: {roll}\nChapter: {chapter}\nTest: {test_name}\nScore: {score}/{total}\n\n--- Detailed Report ---\n{report_content}"
+    else:
+        subject = f"Your Exam Result - (Mitradnya Publication's) ({score}/{total})"
+        body = f"Dear {student_name},\n\nYou have successfully completed the online test.\n\nChapter: {chapter}\nTest: {test_name}\nYour Score: {score}/{total}\n\n--- Detailed Performance ---\n{report_content}\n\nKeep Studying!\n- Mitradnya Publication's"
+
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = TEACHER_NAME
+    msg['To'] = receiver_email
+
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(TEACHER_EMAIL, EMAIL_PASSWORD)
+        server.sendmail(TEACHER_EMAIL, receiver_email, msg.as_string())
+        server.quit()
+        return True
+    except: return False
+
+# --- CUSTOM CSS ---
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: var(--background-color);
+        background-image: radial-gradient(circle at top right, rgba(79, 70, 229, 0.05), transparent),
+                          radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.05), transparent);
+    }
+    .news-ticker {
+        background: linear-gradient(90deg, rgba(79, 70, 229, 0.1), rgba(6, 182, 212, 0.1));
+        color: var(--text-color);
+        padding: 12px;
+        font-weight: 700;
+        font-size: 16px;
+        border-radius: 8px;
+        border-left: 5px solid #4F46E5;
+        margin-bottom: 20px;
+        box-shadow: 0px 4px 6px rgba(0,0,0,0.05);
+    }
+    h1, h2, h3 { 
+        color: var(--text-color) !important; 
+        text-align: center; 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    h1 { font-size: 2.6em !important; font-weight: 900; margin-bottom: 0px; padding-bottom: 10px; }
+    div.stButton > button:first-child {
+        background: linear-gradient(90deg, #4F46E5, #3B82F6);
+        color: white !important; border: none; border-radius: 8px;
+        padding: 12px 24px; font-size: 16px; font-weight: bold;
+        transition: all 0.3s ease; box-shadow: 0px 4px 10px rgba(79, 70, 229, 0.3);
+    }
+    div.stButton > button:first-child:hover {
+        transform: translateY(-2px); box-shadow: 0px 6px 15px rgba(79, 70, 229, 0.5);
+    }
+    .stTabs [data-baseweb="tab-list"] { gap: 8px; }
+    .stTabs [data-baseweb="tab"] { background-color: rgba(128, 128, 128, 0.05); border-radius: 8px 8px 0px 0px; padding: 12px 20px; border: none; }
+    .stTabs [aria-selected="true"] { background-color: rgba(79, 70, 229, 0.1); border-bottom: 3px solid #4F46E5; }
+    .stTabs [aria-selected="true"] div[data-testid="stMarkdownContainer"] p { color: #4F46E5 !important; font-weight: 800; font-size: 16px; }
+    div.stRadio > div, div.stInfo, div.stSuccess, div.stWarning, div.stError { border-radius: 10px; box-shadow: 0px 2px 10px rgba(0,0,0,0.04); }
+    div.stRadio > div { background-color: var(--secondary-background-color); padding: 15px; border-left: 5px solid #06B6D4; transition: transform 0.2s ease; }
+    div.stRadio > div:hover { transform: translateX(4px); border-left: 5px solid #4F46E5; }
+    </style>
+    """, unsafe_allow_html=True)
+
+st.sidebar.markdown("<h2 style='text-align: left; font-size: 22px;'> 📚Mitradnya Publication's📚 </h2>", unsafe_allow_html=True)
+st.sidebar.markdown("---")
+
+if st.session_state.is_authenticated:
+    st.sidebar.success("🌟 Premium Access Active")
+else:
+    st.sidebar.warning("🔒 Free Version (Limited Access)")
+
+if 'test_status' not in st.session_state:
+    st.session_state.test_status = 'not_started' 
+
 if df is not None:
-    chapter_col = df.columns[0]
-    selected_chapter = st.sidebar.selectbox("Select Chapter:", df[chapter_col].unique())
+    sidebar_disabled = st.session_state.test_status != 'not_started'
+    chapter_col = 'No.' if 'No.' in df.columns else 'No' if 'No' in df.columns else df.columns[0]
+    chapters = df[chapter_col].unique()
+    selected_chapter = st.sidebar.selectbox("1. Select Chapter:", chapters, disabled=sidebar_disabled)
     
-    st.title("📚 Mitradnya Publication's Portal")
-    tab1, tab2, tab3, tab4 = st.tabs(["📝 Exam Portal", "📖 Study Room", "📓 Q & A Bank", "📄 Papers"])
+    chapter_questions = df[df[chapter_col] == selected_chapter]
+    total_q = len(chapter_questions)
+    
+    st.sidebar.markdown("---")
+    
+    chunk_size = 20
+    test_parts = []
+    for i in range(0, total_q, chunk_size):
+        test_parts.append(f"Test {i//chunk_size + 1}")
+        
+    selected_part = st.sidebar.radio("2. Select Test Part:", test_parts, disabled=sidebar_disabled)
+    
+    part_index = test_parts.index(selected_part)
+    start_idx = part_index * chunk_size
+    end_idx = start_idx + chunk_size
+    current_quiz_df = chapter_questions.iloc[start_idx:end_idx]
+    
+    st.title("📚 Mitradnya Publication's Online Portal 📚")
+    
+    st.markdown("<div class='news-ticker'><marquee behavior='scroll' direction='left' scrollamount='6'>🔥 Welcome to Mitradnya Publication's! | 🚀 Unlock Premium Features Today | 🎓 Best Study Material by Mitradnya Publication's | 📞 Need a Premium Key? Contact on: 9422152294</marquee></div>", unsafe_allow_html=True)
+    
+    st.markdown(f"<h3 style='font-size: 20px;'>📘 Topic: Chapter {selected_chapter}</h3>", unsafe_allow_html=True)
+    st.write(f"**{selected_part} (20 Marks / 20 Minutes)**")
+    
+    if st.session_state.test_status == 'not_started':
+        tab1, tab2, tab3, tab4 = st.tabs(["📝 Exam Portal", "📖 Study Room", "📓 Chapter Q & A", "📄 Papers & Solutions"])
         
         with tab1:
             if selected_part != "Test 1" and not st.session_state.is_authenticated:
@@ -117,9 +273,9 @@ if df is not None:
                         
                         st.markdown("---")
                         if os.path.exists(img_file):
-                            st.image(img_file, caption=f"Visualization: {selected_adj} by Mitradnya Publication's", use_container_width=True)
+                            st.image(img_file, caption=f"Visualization: {selected_adj} by Mitradnya Publication", use_container_width=True)
                         elif os.path.exists(img_file_alt):
-                            st.image(img_file_alt, caption=f"Visualization: {selected_adj} by Mitradnya Publication's", use_container_width=True)
+                            st.image(img_file_alt, caption=f"Visualization: {selected_adj} by Mitradnya Publication", use_container_width=True)
                         else:
                             st.error("⚠️ Image Not Found in the system.")
                             st.warning(f"🔎 System checked for: **`{img_file}`**")
@@ -140,56 +296,52 @@ if df is not None:
                 st.info(f"💡 **Topic: Chapter {selected_chapter}**")
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
 
-        # ==========================================
-        # Tab 3: Categorized Q&A with AI Solution
+       # ==========================================
+        # Tab 3: Fixed Categorized Q&A
         # ==========================================
         with tab3:
-        if qna_df is not None:
-            cat_tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
-            categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
+            st.markdown("<h3 style='font-size:22px;'>📓 Mitradnya Publication's Study Portal</h3>", unsafe_allow_html=True)
             
-            for i, cat_tab in enumerate(cat_tabs):
-                with cat_tab:
-                    filtered_df = qna_df[
-                        (qna_df['Chapter_Name'].str.contains(str(selected_chapter), case=False, na=False)) & 
-                        (qna_df['Category'].str.strip() == categories[i])
-                    ]
-                    
-                    if not filtered_df.empty:
-                        for idx, row in filtered_df.iterrows():
-                            # येथे पूर्ण प्रश्न दिसेल
-                            with st.expander(f"Question: {row['Question_Text'][:40]}..."):
-                                st.markdown("### 📝 Full Problem Statement:")
-                                st.write(row['Question_Text'])
+            if qna_df is not None:
+                # रिकाम्या जागा भरून घेणे (महत्त्वाचे)
+                qna_df['Chapter_Name_Filled'] = qna_df['Chapter_Name'].ffill()
+                
+                cat_tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
+                categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
+                
+                for i, cat_tab in enumerate(cat_tabs):
+                    with cat_tab:
+                        cat_name = categories[i]
+                        # फिल्टरिंग करताना खात्री करणे की पूर्ण डेटा येईल
+                        filtered_df = qna_df[
+                            (qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)) & 
+                            (qna_df['Category'].astype(str).str.strip() == cat_name)
+                        ]
+                        
+                        if not filtered_df.empty:
+                            # प्रत्येक प्रश्नासाठी गट करणे
+                            grouped = filtered_df.groupby('Question_ID')
+                            for q_idx, (q_id, group) in enumerate(grouped):
+                                # सर्व ओळी एकत्र जोडणे
+                                full_q = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                                 
-                                if st.button("🧠 Generate Solution", key=f"btn_{i}_{idx}"):
-                                    with st.spinner("⏳ AI is calculating..."):
-                                        try:
-                                            model = genai.GenerativeModel('gemini-3.5-flash')
-                                            response = model.generate_content(f"Solve this accountancy problem in Tally format: {row['Question_Text']}")
-                                            st.markdown(response.text)
-                                        except Exception as e:
-                                            st.error(f"AI Error: {e}")
-                    else:
-                        st.info("या विभागात अजून प्रश्न नाहीत.")
-        else:
-            st.error("डेटा फाईल्स सापडल्या नाहीत!")
-                                                                
-                                    # 🧠 AI Solution Generator Button
-                                    if st.button(f"🧠 Generate Solution", key=f"ai_{cat_name}_{q_idx}"):
-                                        with st.spinner("⏳ Getting Solution..."):
+                                with st.expander(f"Question {q_idx + 1}: {group.iloc[0]['Question_Text'][:40]}..."):
+                                    st.markdown("### 📝 Full Problem Statement:")
+                                    st.markdown(full_q)
+                                    
+                                    if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}"):
+                                        with st.spinner("⏳ Generating Solution..."):
                                             try:
                                                 model = genai.GenerativeModel('gemini-3.5-flash')
-                                                prompt = f"Solve this Accountancy problem in Tally ERP table format: {full_question_text}"
-                                                response = model.generate_content(prompt)
-                                                st.success("✅ Solution Generated!")
+                                                response = model.generate_content(f"Solve this accountancy problem: {full_q}")
                                                 st.markdown(response.text)
                                             except Exception as e:
-                                                st.error(f"❌ AI Error: {e}")
+                                                st.error(f"Error: {e}")
                         else:
-                            st.info(f"Will Update Soon!")
+                            st.info(f"या भागात अजून प्रश्न अपडेट व्हायचे आहेत.")
             else:
-                st.error("⚠️ Failed to load QnA data.")                
+                st.error("QnA डेटा लोड झाला नाही.")
+                            
         with tab4:
             st.markdown("<h3 style='font-size:22px;'>📄 Board Papers & Detailed Solutions</h3>", unsafe_allow_html=True)
             st.info("💡 **Previous Year Papers & Model Answers**")
