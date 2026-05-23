@@ -297,31 +297,30 @@ if df is not None:
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
 
         # ==========================================
-        # Tab 3: Chapter Q&A - Corrected Version
+        # Tab 3: Chapter Q&A
         # ==========================================
         with tab3:
             st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A</h3>", unsafe_allow_html=True)
             
             if qna_df is not None:
-                # आपण येथे 'Chapter_Name_Filled' वापरत आहोत जे लोड करताना तयार केले आहे
                 chapter_rows = qna_df[qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
                 
                 if not chapter_rows.empty:
                     grouped = chapter_rows.groupby('Question_ID')
                     for q_idx, (q_id, group) in enumerate(grouped):
-                        # पूर्ण प्रश्न जोडण्यासाठी हे लॉजिक
                         full_question_text = "\n\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                         
-                        # एक्सपँडरमध्ये प्रश्न दाखवणे
                         with st.expander(f"Q {q_idx + 1}: {str(group.iloc[0].get('Question_Text', ''))[:50]}..."):
                             st.markdown("### 📝 Full Question:")
                             st.markdown(full_question_text)
+                            
+                            st.markdown("---")
                             
                             if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
                                 with st.spinner("⏳ Analyzing..."):
                                     try:
                                         model = genai.GenerativeModel('gemini-1.5-flash')
-                                        response = model.generate_content(full_question_text)
+                                        response = model.generate_content(f"Solve this accountancy problem: {full_question_text}")
                                         st.markdown(response.text)
                                     except Exception as e:
                                         st.error(f"❌ AI Error: {e}")
