@@ -13,14 +13,13 @@ def check_login():
                 <style>
                 .login-box {
                     padding: 2rem;
-                    border-radius: 15px;
+                    border-radius: 25px;
                     border: 1px solid #e6e6e6;
-                    background-color: #f9f9f9;
                     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
                 }
                 </style>
                 <div class="login-box">
-                    <h2 style='text-align: center; color: #4F46E5;'>🎓 Mitradnya Portal</h2>
+                    <h2 style='text-align: center; color: #4F46E5;'>📚 Mitradnya Publication's Portal 📚</h2>
                     <p style='text-align: center;'>Welcome back, please login.</p>
                 </div>
             """, unsafe_allow_html=True)
