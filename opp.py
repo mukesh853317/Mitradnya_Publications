@@ -40,12 +40,14 @@ except:
 
 # 🎯 Gemini AI Setup
 try:
-    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+    GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY")
+    if not GEMINI_API_KEY:
+        st.error("❌ Key is empty in Secrets!")
     if AI_AVAILABLE:
         # हे कोडमध्ये असं अपडेट करा:
         genai.configure(api_key=GEMINI_API_KEY, api_version='v1')
 except:
-    GEMINI_API_KEY = ""
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") # जर Secrets सापडले नाही तर सर्व्हर वरून उचल
 
 TEACHER_NAME = "Mitradnya Publication's"
 SECRET_EXAM_PIN = "MIT2026" 
