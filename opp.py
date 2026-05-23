@@ -49,7 +49,7 @@ def load_data():
 
 df = load_data()
 
-# --- QnA डेटा लोड करण्यासाठी नवीन सुरक्षित फंक्शन ---
+# --- Improved Smart Function to Load QnA Data ---
 @st.cache_data
 def load_qna_data():
     try:
@@ -59,10 +59,15 @@ def load_qna_data():
             qna_df = pd.read_csv('QnA.csv', encoding='cp1252', on_bad_lines='skip')
         
         qna_df.columns = qna_df.columns.str.strip()
+        qna_df = qna_df.astype(object)
         
-        # जादू: सर्व डेटाला आधी 'Text' बनवणे, म्हणजे float64 चा एरर येणार नाही
-        qna_df = qna_df.astype(object) 
-        qna_df.fillna("माहिती उपलब्ध नाही", inplace=True) 
+        # Identify blank spaces in Excel and fill them (Forward Fill)
+        qna_df.replace(r'^\s*$', pd.NA, regex=True, inplace=True)
+        qna_df['Question_Start'] = qna_df['Chapter_Name'].notna()
+        qna_df['Question_ID'] = qna_df['Question_Start'].cumsum()
+        qna_df['Chapter_Name_Filled'] = qna_df['Chapter_Name'].ffill()
+        
+        qna_df.fillna("", inplace=True)
         return qna_df
     except Exception as e:
         st.error(f"🔍 Technical Error Details: {e}")
@@ -355,32 +360,46 @@ if df is not None:
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
 
         # ==========================================
-        # टॅब ३: प्रश्न उत्तरे आणि प्रॅक्टिस (Chapter Q & A)
+        # Tab 3: Chapter Q&A and Practice Questions
         # ==========================================
         with tab3:
             st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A and Practice Questions</h3>", unsafe_allow_html=True)
             st.info(f"💡 **Topic: Chapter {selected_chapter}**")
             
             if qna_df is not None:
-                qna_chapter_col = 'Chapter_Name' if 'Chapter_Name' in qna_df.columns else qna_df.columns[0]
-                chapter_qna = qna_df[qna_df[qna_chapter_col].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
+                # Filter all rows based on the selected chapter
+                chapter_rows = qna_df[qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
                 
-                if not chapter_qna.empty:
+                if not chapter_rows.empty:
                     st.write("---")
-                    for idx, row in chapter_qna.iterrows():
-                        question_text = str(row.get('Question_Text', f"प्रश्न {idx+1}"))
-                        answer_text = str(row.get('Answer_or_Hint', "उत्तर दिलेले नाही."))
+                    
+                    # Grouping different parts of the same question together
+                    grouped = chapter_rows.groupby('Question_ID')
+                    
+                    for q_idx, (q_id, group) in enumerate(grouped):
+                        first_row = group.iloc[0]
+                        main_title = str(first_row.get('Question_Text', ''))
                         
-                        with st.expander(f"🔹 प्रश्न {idx+1}"):
-                            lines = question_text.split('\n')
+                        # Set Expander title based on the first line
+                        display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
+                        
+                        with st.expander(f"🔹 Question {q_idx + 1}: {display_title}"):
                             table_data = []
+                            answer_text = ""
                             
-                            for line in lines:
+                            for _, row in group.iterrows():
+                                line = str(row.get('Question_Text', '')).strip()
+                                ans = str(row.get('Answer_or_Hint', '')).strip()
+                                
+                                if ans:
+                                    answer_text = ans
+                                
+                                # If the line contains '|', treat it as table data
                                 if '|' in line:
                                     table_data.append([col.strip() for col in line.split('|')])
                                 else:
+                                    # Print collected table data as an HTML table
                                     if table_data:
-                                        # जादू: नको असलेले आकडे लपवण्यासाठी HTML टेबल
                                         html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd;'>"
                                         for t_row in table_data:
                                             html_table += "<tr>"
@@ -389,11 +408,13 @@ if df is not None:
                                             html_table += "</tr>"
                                         html_table += "</table><br>"
                                         st.markdown(html_table, unsafe_allow_html=True)
-                                        table_data = [] 
+                                        table_data = []
                                     
-                                    if line.strip():
-                                        st.markdown(f"{line.strip()}")
-                                        
+                                    # Print normal text like Adjustments
+                                    if line:
+                                        st.markdown(line)
+                            
+                            # Print any remaining table data at the end
                             if table_data:
                                 html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd;'>"
                                 for t_row in table_data:
@@ -403,13 +424,15 @@ if df is not None:
                                     html_table += "</tr>"
                                 html_table += "</table><br>"
                                 st.markdown(html_table, unsafe_allow_html=True)
-                                
-                            st.markdown("---")
-                            st.markdown(f"**उत्तर / हिंट:** \n{answer_text}")
+                            
+                            # Print Answer or Hint section
+                            if answer_text:
+                                st.markdown("---")
+                                st.markdown(f"**Answer / Hint:** \n{answer_text}")
                 else:
-                    st.warning("⏳ या चॅप्टरचे प्रश्न लवकरच अपडेट केले जातील! (Stay Tuned)")
+                    st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
             else:
-                st.error("⚠️ QnA डेटा लोड होऊ शकला नाही. कृपया फाईल तपासा.")
+                st.error("⚠️ Failed to load QnA data. Please check the file.")
         # ==========================================
         # टॅब ४: पेपर्स आणि सोल्युशन्स (Papers & Solutions)
         # ==========================================
