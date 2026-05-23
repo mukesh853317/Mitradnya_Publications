@@ -17,7 +17,7 @@ def main():
     if not check_login():
         return # जर लॉगिन नसेल तर पुढे काहीच लोड होणार नाही
 
-    st.title("Mitradnya Publication Portal")
+    st.title("📚 Mitradnya Publication Portal 📚")
     # बाकीचा कोड...
 
 if __name__ == "__main__":
