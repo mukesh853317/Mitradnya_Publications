@@ -325,6 +325,7 @@ if df is not None:
                                 
                                 with st.expander(f"Q {q_idx + 1}: {main_title[:50]}..."):
                                      st.markdown(full_question_text)
+                                        full_question_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                                     
                                     # 🧠 AI Solution Generator Button
                                     if st.button(f"🧠 Generate Solution", key=f"ai_{cat_name}_{q_idx}"):
