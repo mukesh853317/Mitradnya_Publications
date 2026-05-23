@@ -328,7 +328,7 @@ if df is not None:
                                     
                                     # 🧠 AI Solution Generator Button
                                     if st.button(f"🧠 Generate Solution", key=f"ai_{cat_name}_{q_idx}"):
-                                        with st.spinner("⏳ AI is calculating..."):
+                                        with st.spinner("⏳ Getting Solution..."):
                                             try:
                                                 model = genai.GenerativeModel('gemini-3.5-flash')
                                                 prompt = f"Solve this Accountancy problem in Tally ERP table format: {full_question_text}"
@@ -338,7 +338,7 @@ if df is not None:
                                             except Exception as e:
                                                 st.error(f"❌ AI Error: {e}")
                         else:
-                            st.info(f"या भागात अजून प्रश्न नाहीत. (CSV मध्ये Category: {cat_name} तपासा!)")
+                            st.info(f"Will Update Soon!)")
             else:
                 st.error("⚠️ Failed to load QnA data.")                
         with tab4:
