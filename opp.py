@@ -400,7 +400,7 @@ if df is not None:
                                             for col in t_row:
                                                 # पहिली ओळ Header म्हणून डार्क करणे
                                                 if r_idx == 0:
-                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
+                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                                 else:
                                                     html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                             html_table += "</tr>"
@@ -417,7 +417,7 @@ if df is not None:
                                     html_table += "<tr>"
                                     for col in t_row:
                                         if r_idx == 0:
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                         else:
                                             html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
