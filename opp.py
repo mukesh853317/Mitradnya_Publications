@@ -297,78 +297,38 @@ if df is not None:
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
 
         # ==========================================
-        # Tab 3: Chapter Q&A and AI Generator
+        # Tab 3: Chapter Q&A - Corrected Version
         # ==========================================
         with tab3:
-            st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A and Practice Questions</h3>", unsafe_allow_html=True)
-            st.info(f"💡 **Topic: Chapter {selected_chapter}**")
+            st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A</h3>", unsafe_allow_html=True)
             
             if qna_df is not None:
-                # तीन टॅब्स बनवणे
-                cat_tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
-                categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
-
-                for i, cat_tab in enumerate(cat_tabs):
-                    with cat_tab:
-                        cat_name = categories[i]
-                        # डेटा फिल्टर करणे
-                        filtered_rows = qna_df[
-                            (qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)) & 
-                            (qna_df['Category'].astype(str).str.strip() == cat_name)
-                        ]
+                # आपण येथे 'Chapter_Name_Filled' वापरत आहोत जे लोड करताना तयार केले आहे
+                chapter_rows = qna_df[qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
+                
                 if not chapter_rows.empty:
-                    st.write("---")
                     grouped = chapter_rows.groupby('Question_ID')
-                    
                     for q_idx, (q_id, group) in enumerate(grouped):
-                        first_row = group.iloc[0]
-                        main_title = str(first_row.get('Question_Text', ''))
-                        display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
+                        # पूर्ण प्रश्न जोडण्यासाठी हे लॉजिक
+                        full_question_text = "\n\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                         
-                        full_question_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
-                        
-                        with st.expander(f" Q {q_idx + 1}: {display_title}"):
-                            table_data = []
-                            answer_text = ""
+                        # एक्सपँडरमध्ये प्रश्न दाखवणे
+                        with st.expander(f"Q {q_idx + 1}: {str(group.iloc[0].get('Question_Text', ''))[:50]}..."):
+                            st.markdown("### 📝 Full Question:")
+                            st.markdown(full_question_text)
                             
-                            for _, row in group.iterrows():
-                                line = str(row.get('Question_Text', '')).strip()
-                                ans = str(row.get('Answer_or_Hint', '')).strip()
-                                
-                                if ans and ans != "nan" and ans != "Information not available.":
-                                    answer_text = ans
-                                
-                                if '|' in line:
-                                    table_data.append([col.strip() for col in line.split('|')])
-                                else:
-                                    if table_data:
-                                        html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd;'>"
-                                        for r_idx, t_row in enumerate(table_data):
-                                            html_table += "<tr>"
-                                            for col in t_row:
-                                                if r_idx == 0:
-                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; '>{col}</th>"
-                                                else:
-                                                    html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
-                                            html_table += "</tr>"
-                                        html_table += "</table><br>"
-                                        st.markdown(html_table, unsafe_allow_html=True)
-                                        table_data = []
-                                    if line:
-                                        st.markdown(line)
-                            
-                            if table_data:
-                                html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd;'>"
-                                for r_idx, t_row in enumerate(table_data):
-                                    html_table += "<tr>"
-                                    for col in t_row:
-                                        if r_idx == 0:
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; '>{col}</th>"
-                                        else:
-                                            html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
-                                    html_table += "</tr>"
-                                html_table += "</table><br>"
-                                st.markdown(html_table, unsafe_allow_html=True)
+                            if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
+                                with st.spinner("⏳ Analyzing..."):
+                                    try:
+                                        model = genai.GenerativeModel('gemini-1.5-flash')
+                                        response = model.generate_content(full_question_text)
+                                        st.markdown(response.text)
+                                    except Exception as e:
+                                        st.error(f"❌ AI Error: {e}")
+                else:
+                    st.warning("या चॅप्टरसाठी प्रश्न उपलब्ध नाहीत.")
+            else:
+                st.error("QnA डेटा लोड झाला नाही.")
                             
                             # 🎯 AI Solution Generator (Clean & Backend)
                             st.markdown("---")
