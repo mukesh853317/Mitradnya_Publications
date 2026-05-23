@@ -379,7 +379,7 @@ if df is not None:
                         main_title = str(first_row.get('Question_Text', ''))
                         display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
                         
-                        with st.expander(f" Q {q_idx + 1}: {display_title}"):
+                        with st.expander(f"🔹 Question {q_idx + 1}: {display_title}"):
                             table_data = []
                             answer_text = ""
                             
@@ -387,7 +387,7 @@ if df is not None:
                                 line = str(row.get('Question_Text', '')).strip()
                                 ans = str(row.get('Answer_or_Hint', '')).strip()
                                 
-                                if ans:
+                                if ans and ans != "nan" and ans != "माहिती उपलब्ध नाही":
                                     answer_text = ans
                                 
                                 if '|' in line:
@@ -398,9 +398,8 @@ if df is not None:
                                         for r_idx, t_row in enumerate(table_data):
                                             html_table += "<tr>"
                                             for col in t_row:
-                                                # पहिली ओळ Header म्हणून डार्क करणे
                                                 if r_idx == 0:
-                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
+                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
                                                 else:
                                                     html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                             html_table += "</tr>"
@@ -417,20 +416,21 @@ if df is not None:
                                     html_table += "<tr>"
                                     for col in t_row:
                                         if r_idx == 0:
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
                                         else:
                                             html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
                                 html_table += "</table><br>"
                                 st.markdown(html_table, unsafe_allow_html=True)
                             
-                            # 'Generate Solution' AI Button Logic
-                            if answer_text:
-                                st.markdown("---")
-                                # युनिक बटन तयार करणे
-                                if st.button(f"🧠 Generate Solution", key=f"btn_gen_{selected_chapter}_{q_idx}"):
+                            # 🎯 नेहमी दिसणारे Generate Solution बटन
+                            st.markdown("---")
+                            if st.button(f"🧠 Generate Solution", key=f"btn_gen_{selected_chapter}_{q_idx}"):
+                                if answer_text:
                                     st.success("✅ Solution Generated Successfully!")
-                                    st.markdown(f"{answer_text}")
+                                    st.markdown(f"**Answer / Hint:** \n{answer_text}")
+                                else:
+                                    st.info("💡 Detailed solution for this question will be updated soon!")
                 else:
                     st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
             else:
