@@ -324,7 +324,13 @@ if df is not None:
                                 
                                 with st.expander(f"Q {q_idx + 1}: {main_title[:50]}..."):
                                     st.markdown("### Question:")
-                                    st.markdown(full_question_text)
+                                    s# प्रश्न नीट दिसण्यासाठी हे लॉजिक वापरा
+                                full_question_list = [str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()]
+                                full_question_text = "\n\n".join(full_question_list) # ओळींमध्ये थोडी जागा (Space) देईल
+                                
+                                with st.expander(f"Q {q_idx + 1}: {main_title[:40]}..."):
+                                    st.markdown("### 📝 Full Problem Statement:")
+                                    st.markdown(full_question_text) # आता पूर्ण प्रश्न स्पष्ट दिसेल
                                     
                                     st.markdown("---")
                                     
