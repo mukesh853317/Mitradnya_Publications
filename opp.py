@@ -367,7 +367,7 @@ if df is not None:
                                     models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
                                     st.write("Available models:", models)
                                     selected_model = models[0]
-                                    model = genai.GenerativeModel(selected_model)
+                                    model = genai.GenerativeModel('gemini-3.5-flash')
                                     response = model.generate_content(full_question_text)
                                     st.success("✅ Solution Generated!")
                                     st.markdown(response.text)
