@@ -49,6 +49,23 @@ def load_data():
 
 df = load_data()
 
+# --- QnA डेटा लोड करण्यासाठी नवीन सुरक्षित फंक्शन ---
+@st.cache_data
+def load_qna_data():
+    try:
+        try:
+            qna_df = pd.read_csv('QnA.csv', encoding='utf-8', on_bad_lines='skip')
+        except Exception:
+            qna_df = pd.read_csv('QnA.csv', encoding='cp1252', on_bad_lines='skip')
+        
+        qna_df.columns = qna_df.columns.str.strip()
+        qna_df.fillna("माहिती उपलब्ध नाही", inplace=True) 
+        return qna_df
+    except Exception as e:
+        return None
+
+qna_df = load_qna_data()
+
 def send_detailed_email(receiver_email, student_name, div, roll, score, total, chapter, test_name, report_content, is_teacher=True):
     if is_teacher:
         subject = f"New Result: {student_name} ({div}-{roll}) - {score}/{total}"
