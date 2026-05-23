@@ -42,7 +42,8 @@ except:
 try:
     GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
     if AI_AVAILABLE:
-        genai.configure(api_key=GEMINI_API_KEY)
+        # हे कोडमध्ये असं अपडेट करा:
+        genai.configure(api_key=GEMINI_API_KEY, api_version='v1')
 except:
     GEMINI_API_KEY = ""
 
@@ -367,7 +368,7 @@ if df is not None:
                                 else:
                                     with st.spinner("⏳ AI is calculating and generating Trading, P&L, and Balance Sheet... (This may take 10-15 seconds)"):
                                         try:
-                                            model = genai.GenerativeModel('gemini-pro')
+                                            model = genai.GenerativeModel('gemini-1.5-flash-latest')
                                             prompt = f"""
                                             You are an expert Indian Commerce Teacher. 
                                             Solve the following Accountancy problem accurately.
