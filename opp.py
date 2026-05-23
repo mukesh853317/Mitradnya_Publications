@@ -319,23 +319,19 @@ if df is not None:
                             for q_idx, (q_id, group) in enumerate(grouped):
                                 first_row = group.iloc[0]
                                 main_title = str(first_row.get('Question_Text', ''))
-                                # पूर्ण प्रश्न मजकूर तयार करणे
-                                full_question_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                                 
-                                with st.expander(f"Q {q_idx + 1}: {main_title[:50]}..."):
-                                    st.markdown("### Question:")
-                                    s# प्रश्न नीट दिसण्यासाठी हे लॉजिक वापरा
+                                # पूर्ण प्रश्न मजकूर तयार करणे
                                 full_question_list = [str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()]
-                                full_question_text = "\n\n".join(full_question_list) # ओळींमध्ये थोडी जागा (Space) देईल
+                                full_question_text = "\n\n".join(full_question_list)
                                 
                                 with st.expander(f"Q {q_idx + 1}: {main_title[:40]}..."):
                                     st.markdown("### 📝 Full Problem Statement:")
-                                    st.markdown(full_question_text) # आता पूर्ण प्रश्न स्पष्ट दिसेल
+                                    st.markdown(full_question_text)
                                     
                                     st.markdown("---")
                                     
                                     if st.button(f"🧠 Generate Solution", key=f"btn_ai_{cat_name}_{q_idx}"):
-                                        with st.spinner("⏳ Generating Solution..."):
+                                        with st.spinner("⏳ AI is calculating..."):
                                             try:
                                                 model = genai.GenerativeModel('gemini-3.5-flash')
                                                 prompt = f"Solve this Accountancy problem in Tally ERP table format: {full_question_text}"
@@ -345,7 +341,7 @@ if df is not None:
                                             except Exception as e:
                                                 st.error(f"❌ AI Error: {e}")
                         else:
-                            st.info(f"Will Update Soon!)")
+                            st.info(f"या भागात अजून प्रश्न नाहीत. (Category: {cat_name} तपासा!)")
             else:
                 st.error("⚠️ Failed to load QnA data.")                
         with tab4:
