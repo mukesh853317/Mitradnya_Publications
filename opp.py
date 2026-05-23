@@ -332,24 +332,24 @@ if df is not None:
                 # 🎯 AI Solution Generator (Clean & Backend)
                 st.markdown("---")
                 if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
-                with st.spinner("⏳ Analyzing and generating solution..."):
-                try:
-                # मॉडेलचे नाव डायरेक्ट निवडा (लिस्ट नको)
-                    model = genai.GenerativeModel('gemini-3.5-flash')
-                    response = model.generate_content(full_question_text)
-                    # फक्त उत्तर दाखवा, लिस्ट नको
+                    with st.spinner("⏳ Analyzing and generating solution..."):
+                        try:
+                            # मॉडेलचे नाव डायरेक्ट निवडा (लिस्ट नको)
+                            model = genai.GenerativeModel('gemini-3.5-flash')
+                            response = model.generate_content(full_question_text)
+                            # फक्त उत्तर दाखवा, लिस्ट नको
                     st.success("✅ Solution Generated!")
                     st.markdown(response.text)
-                except Exception as e:
-                    st.error(f"❌ AI Error: {e}")
-                                    
-                            if answer_text:
-                                st.markdown(f"**Manual Hint / Note:** \n{answer_text}")
-                else:
-                    st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
-            else:
-                st.error("⚠️ Failed to load QnA data. Please check the file.")
-                            
+except Exception as e:
+st.error(f"❌ AI Error: {e}")
+
+if answer_text:
+    st.markdown(f"**Manual Hint / Note:** \n{answer_text}")
+else:
+    st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
+else:
+st.error("⚠️ Failed to load QnA data. Please check the file.")
+                         
         with tab4:
             st.markdown("<h3 style='font-size:22px;'>📄 Board Papers & Detailed Solutions</h3>", unsafe_allow_html=True)
             st.info("💡 **Previous Year Papers & Model Answers**")
