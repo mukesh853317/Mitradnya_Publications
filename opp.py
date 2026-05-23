@@ -370,7 +370,23 @@ if df is not None:
                                 else:
                                     with st.spinner("⏳ AI is calculating and generating Trading, P&L, and Balance Sheet... (This may take 10-15 seconds)"):
                                         try:
-                                            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                                            st.markdown("---")
+                            if st.button(f"🧠 Debug AI Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
+                                try:
+                                    # List all available models
+                                    models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+                                    st.write("Available models:", models)
+                                    
+                                    # Pick the first one from the list automatically
+                                    selected_model = models[0]
+                                    st.write(f"Using model: {selected_model}")
+                                    
+                                    model = genai.GenerativeModel(selected_model)
+                                    response = model.generate_content(full_question_text)
+                                    st.success("✅ Solution Generated!")
+                                    st.markdown(response.text)
+                                except Exception as e:
+                                    st.error(f"❌ AI Error: {e}")
                                             prompt = f"""
                                             You are an expert Indian Commerce Teacher. 
                                             Solve the following Accountancy problem accurately.
