@@ -379,7 +379,7 @@ if df is not None:
                         main_title = str(first_row.get('Question_Text', ''))
                         display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
                         
-                        with st.expander(f"🔹 Question {q_idx + 1}: {display_title}"):
+                        with st.expander(f" Question {q_idx + 1}: {display_title}"):
                             table_data = []
                             answer_text = ""
                             
