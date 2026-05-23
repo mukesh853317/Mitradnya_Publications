@@ -327,8 +327,8 @@ if df is not None:
                                         st.markdown(model.generate_content(f"Solve this: {q_text}").text)
                                     except Exception as e:
                                         st.error(f"AI Error: {e}")
-                else:
-                    st.warning("या चॅप्टरसाठी प्रश्न उपलब्ध नाहीत.")
+            else:
+                st.warning("या चॅप्टरसाठी प्रश्न उपलब्ध नाहीत.")
             else:
                 st.error("QnA डेटा लोड झाला नाही.")
                          
