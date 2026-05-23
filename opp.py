@@ -360,19 +360,20 @@ if df is not None:
                                 html_table += "</table><br>"
                                 st.markdown(html_table, unsafe_allow_html=True)
                             
-                            # 🎯 AI Solution Generator
+                            # 🎯 AI Solution Generator (Clean & Backend)
                             st.markdown("---")
-                            if st.button(f"🧠 Debug AI Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
-                                try:
-                                    models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-                                    st.write("Available models:", models)
-                                    selected_model = models[0]
-                                    model = genai.GenerativeModel('gemini-3.5-flash')
-                                    response = model.generate_content(full_question_text)
-                                    st.success("✅ Solution Generated!")
-                                    st.markdown(response.text)
-                                except Exception as e:
-                                    st.error(f"❌ AI Error: {e}")
+                            if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
+                                with st.spinner("⏳ Analyzing and generating solution..."):
+                                    try:
+                                        # मॉडेलचे नाव डायरेक्ट निवडा (लिस्ट नको)
+                                        model = genai.GenerativeModel('gemini-1.5-flash') 
+                                        response = model.generate_content(full_question_text)
+                                        
+                                        # फक्त उत्तर दाखवा, लिस्ट नको
+                                        st.success("✅ Solution Generated!")
+                                        st.markdown(response.text)
+                                    except Exception as e:
+                                        st.error(f"❌ AI Error: {e}")
                                     
                             if answer_text:
                                 st.markdown(f"**Manual Hint / Note:** \n{answer_text}")
