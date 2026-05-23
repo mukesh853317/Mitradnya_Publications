@@ -366,7 +366,7 @@ if df is not None:
                                 with st.spinner("⏳ Analyzing and generating solution..."):
                                     try:
                                         # मॉडेलचे नाव डायरेक्ट निवडा (लिस्ट नको)
-                                        model = genai.GenerativeModel('gemini-1.5-flash') 
+                                        model = genai.GenerativeModel('gemini-3.5-flash') 
                                         response = model.generate_content(full_question_text)
                                         
                                         # फक्त उत्तर दाखवा, लिस्ट नको
