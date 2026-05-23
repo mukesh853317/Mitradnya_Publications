@@ -367,7 +367,7 @@ if df is not None:
                                 else:
                                     with st.spinner("⏳ AI is calculating and generating Trading, P&L, and Balance Sheet... (This may take 10-15 seconds)"):
                                         try:
-                                            model = genai.GenerativeModel('gemini-1.5-flash')
+                                            model = genai.GenerativeModel('gemini-1.5-pro')
                                             prompt = f"""
                                             You are an expert Indian Commerce Teacher. 
                                             Solve the following Accountancy problem accurately.
