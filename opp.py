@@ -327,10 +327,10 @@ if df is not None:
                                     st.markdown(full_question_text)
                                     
                                     # 🧠 AI Solution Generator Button
-                                    if st.button(f"🧠 Generate Tally-Format Solution", key=f"ai_{cat_name}_{q_idx}"):
+                                    if st.button(f"🧠 Generate Solution", key=f"ai_{cat_name}_{q_idx}"):
                                         with st.spinner("⏳ AI is calculating..."):
                                             try:
-                                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                                model = genai.GenerativeModel('gemini-3.5-flash')
                                                 prompt = f"Solve this Accountancy problem in Tally ERP table format: {full_question_text}"
                                                 response = model.generate_content(prompt)
                                                 st.success("✅ Solution Generated!")
