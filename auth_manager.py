@@ -19,7 +19,7 @@ def check_login():
                 }
                 </style>
                 <div class="login-box">
-                    <h3 style='text-align: center; color: #4F46E5;'>🎓 Mitradnya Publication's Portal 🎓</h3>
+                    <h3 style='text-align: center; color: #4F46E5;'>🎓Mitradnya Publication's Portal🎓</h3>
                     <p style='text-align: center;'>WELCOME<br>TO</br>📚 MITRADNYA PUBLICATIONS 📚</p></br>
                 </div>
             """, unsafe_allow_html=True)
