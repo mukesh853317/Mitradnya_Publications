@@ -34,7 +34,6 @@ except ModuleNotFoundError:
 VALID_KEYS = ["MITRADNYA-101", "MUKESH-PRO-2026", "VIP-STUDENT-99"]
 
 # --- Page Config नेहमी सर्वात वर असावे ---
-st.set_page_config(page_title="📚 Mitradnya Publication's Online Exam 📚", page_icon="📝", layout="centered")
 
 if 'is_authenticated' not in st.session_state:
     st.session_state.is_authenticated = False
