@@ -323,9 +323,21 @@ if df is not None:
                                 main_title = str(first_row.get('Question_Text', ''))
                                 with st.expander(f"Q {q_idx + 1}: {main_title[:50]}..."):
                                     st.write(first_row.get('Question_Text', ''))
-                                    if st.button(f"🧠 Solution {q_idx}", key=f"sol_{cat_name}_{q_idx}"):
-                                        st.write(first_row.get('Answer_or_Hint', 'No solution found.'))
-                        else:
+                        
+                        # 🎯 AI Solution Generator (Clean & Backend)
+                            st.markdown("---")
+                            if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
+                                with st.spinner("⏳ Analyzing and generating solution..."):
+                                    try:
+                                        # मॉडेलचे नाव डायरेक्ट निवडा (लिस्ट नको)
+                                        model = genai.GenerativeModel('gemini-1.5-flash') 
+                                        response = model.generate_content(full_question_text)
+                                        
+                                        # फक्त उत्तर दाखवा, लिस्ट नको
+                                        st.success("✅ Solution Generated!")
+                                        st.markdown(response.text)
+                                    except Exception as e:
+                                        st.error(f"❌ AI Error: {e}"):
                             st.warning(f"प्रश्न सापडले नाहीत! कृपया खात्री करा की CSV मधील Category रकान्यात '{cat_name}' हेच नाव आहे. (तुमच्या फाईलमध्ये या कॅटेगरीचे {qna_df['Category'].unique()} हे ऑप्शन्स आहेत)")
             else:
                 st.error("⚠️ QnA डेटा लोड झालेला नाही.")                
