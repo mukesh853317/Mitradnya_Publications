@@ -1,4 +1,5 @@
 import streamlit as st
+from auth_manager import check_login # नवीन फाईल इथून लिंक झाली
 import pandas as pd
 import smtplib
 import requests
@@ -18,6 +19,15 @@ try:
 except ModuleNotFoundError:
     AI_AVAILABLE = False
 
+def main():
+    if not check_login():
+        return # जर लॉगिन नसेल तर पुढे काहीच लोड होणार नाही
+
+    st.title("Mitradnya Publication Portal")
+    # बाकीचा कोड...
+
+if __name__ == "__main__":
+    main()
 # -----------------------------------------------------
 # 1. Premium Access Setup & API Keys
 # -----------------------------------------------------
