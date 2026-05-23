@@ -296,7 +296,7 @@ if df is not None:
                 st.info(f"💡 **Topic: Chapter {selected_chapter}**")
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
 
-       # ==========================================
+        # ==========================================
         # Tab 3: Chapter Q&A and AI Generator
         # ==========================================
         with tab3:
@@ -304,8 +304,18 @@ if df is not None:
             st.info(f"💡 **Topic: Chapter {selected_chapter}**")
             
             if qna_df is not None:
-                chapter_rows = qna_df[qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
-                
+                # तीन टॅब्स बनवणे
+                cat_tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
+                categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
+
+                for i, cat_tab in enumerate(cat_tabs):
+                    with cat_tab:
+                        cat_name = categories[i]
+                        # डेटा फिल्टर करणे
+                        filtered_rows = qna_df[
+                            (qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)) & 
+                            (qna_df['Category'].astype(str).str.strip() == cat_name)
+                        ]
                 if not chapter_rows.empty:
                     st.write("---")
                     grouped = chapter_rows.groupby('Question_ID')
