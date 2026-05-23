@@ -299,9 +299,6 @@ if df is not None:
         # ==========================================
         # Tab 3: Chapter Q&A
         # ==========================================
-        # ==========================================
-        # Tab 3: Chapter Q&A
-        # ==========================================
         with tab3:
             st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A</h3>", unsafe_allow_html=True)
             
@@ -315,8 +312,11 @@ if df is not None:
                         
                         with st.expander(f"Q {q_idx + 1}: {str(group.iloc[0].get('Question_Text', ''))[:50]}..."):
                             st.markdown("### 📝 Full Question:")
-                            st.markdown(full_question_text)
-                            st.markdown("---")
+                            # जर प्रश्नात '|' असेल, तर आपण त्याला टेबलमध्ये बदलू
+                            if "|" in full_question_text:
+                                st.table(pd.DataFrame([x.split('|') for x in full_question_text.split('\n') if '|' in x]))
+                            else:
+                                st.write(full_question_text)
                             
                             if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
                                 with st.spinner("⏳ Generating..."):
