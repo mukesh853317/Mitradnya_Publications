@@ -1,5 +1,21 @@
 import streamlit as st
+import random
+import smtplib
+from email.mime.text import MIMEText
 
+# १. OTP जनरेट करण्याचे फंक्शन
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+# २. ईमेलवर OTP पाठवण्याचे फंक्शन
+def send_otp_email(user_email, otp):
+    msg = MIMEText(f"OTP for Mitradnya Publication's: {otp}")
+    msg['Subject'] = "Login OTP - Mitradnya Publications"
+    msg['From'] = "vidyarthi.mitradnyapublications@gmail.com"
+    msg['To'] = user_email
+    
+    # इथे तुमचा existing SMTP कोड वापरा
+    # ... (server.sendmail logic)
 def check_login():
     """अट्रॅक्टिव्ह लॉगिन मॅनेजर"""
     if 'logged_in' not in st.session_state:
