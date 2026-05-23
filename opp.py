@@ -367,20 +367,16 @@ if df is not None:
             st.info(f"💡 **Topic: Chapter {selected_chapter}**")
             
             if qna_df is not None:
-                # Filter all rows based on the selected chapter
+                # Filter rows based on selected chapter
                 chapter_rows = qna_df[qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
                 
                 if not chapter_rows.empty:
                     st.write("---")
-                    
-                    # Grouping different parts of the same question together
                     grouped = chapter_rows.groupby('Question_ID')
                     
                     for q_idx, (q_id, group) in enumerate(grouped):
                         first_row = group.iloc[0]
                         main_title = str(first_row.get('Question_Text', ''))
-                        
-                        # Set Expander title based on the first line
                         display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
                         
                         with st.expander(f"🔹 Question {q_idx + 1}: {display_title}"):
@@ -394,41 +390,47 @@ if df is not None:
                                 if ans:
                                     answer_text = ans
                                 
-                                # If the line contains '|', treat it as table data
                                 if '|' in line:
                                     table_data.append([col.strip() for col in line.split('|')])
                                 else:
-                                    # Print collected table data as an HTML table
                                     if table_data:
                                         html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd;'>"
-                                        for t_row in table_data:
+                                        for r_idx, t_row in enumerate(table_data):
                                             html_table += "<tr>"
                                             for col in t_row:
-                                                html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
+                                                # पहिली ओळ Header म्हणून डार्क करणे
+                                                if r_idx == 0:
+                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
+                                                else:
+                                                    html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                             html_table += "</tr>"
                                         html_table += "</table><br>"
                                         st.markdown(html_table, unsafe_allow_html=True)
                                         table_data = []
                                     
-                                    # Print normal text like Adjustments
                                     if line:
                                         st.markdown(line)
                             
-                            # Print any remaining table data at the end
                             if table_data:
                                 html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd;'>"
-                                for t_row in table_data:
+                                for r_idx, t_row in enumerate(table_data):
                                     html_table += "<tr>"
                                     for col in t_row:
-                                        html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
+                                        if r_idx == 0:
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
+                                        else:
+                                            html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
                                 html_table += "</table><br>"
                                 st.markdown(html_table, unsafe_allow_html=True)
                             
-                            # Print Answer or Hint section
+                            # 'Generate Solution' AI Button Logic
                             if answer_text:
                                 st.markdown("---")
-                                st.markdown(f"**Answer / Hint:** \n{answer_text}")
+                                # युनिक बटन तयार करणे
+                                if st.button(f"🧠 Generate Solution", key=f"btn_gen_{selected_chapter}_{q_idx}"):
+                                    st.success("✅ Solution Generated Successfully!")
+                                    st.markdown(f"{answer_text}")
                 else:
                     st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
             else:
