@@ -296,51 +296,51 @@ if df is not None:
                 st.info(f"💡 **Topic: Chapter {selected_chapter}**")
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
 
-       # ==========================================
-        # Tab 3: Categorized Q&A (Diagnostic Mode)
+        # ==========================================
+        # Tab 3: Categorized Q&A with AI Solution
         # ==========================================
         with tab3:
             st.markdown("<h3 style='font-size:22px;'>📓 Mitradnya Publication's Study Portal</h3>", unsafe_allow_html=True)
             
             if qna_df is not None:
-                # स्पेलिंग मॅच करण्यासाठी कॅटेगरीचे नाव CSV मधील नावाशी तंतोतंत जुळणे गरजेचे आहे
-                # खालील ओळीत 'Extra_Practical' च्या जागी तुमच्या CSV मधील जशीच्या तशी स्पेलिंग लिहा
-                categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"] 
+                # तीन मुख्य कॅटेगरीचे टॅब्स (तुमच्या CSV मधील स्पेलिंगशी हे तंतोतंत जुळायला हवे)
                 cat_tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
+                categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
                 
                 for i, cat_tab in enumerate(cat_tabs):
                     with cat_tab:
                         cat_name = categories[i]
+                        # फिल्टरिंग (स्पेस किंवा अंडरस्कोरची काळजी घ्या)
+                        filtered_rows = qna_df[
+                            (qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)) & 
+                            (qna_df['Category'].astype(str).str.strip() == cat_name)
+                        ]
                         
-                        # फिल्टर करण्यासाठी डेटा तयार
-                        current_cat_rows = qna_df[(qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)) & 
-                                                 (qna_df['Category'].astype(str).str.strip() == cat_name)]
-                        
-                        if not current_cat_rows.empty:
-                            grouped = current_cat_rows.groupby('Question_ID')
+                        if not filtered_rows.empty:
+                            grouped = filtered_rows.groupby('Question_ID')
                             for q_idx, (q_id, group) in enumerate(grouped):
                                 first_row = group.iloc[0]
                                 main_title = str(first_row.get('Question_Text', ''))
+                                full_question_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
+                                
                                 with st.expander(f"Q {q_idx + 1}: {main_title[:50]}..."):
-                                    st.write(first_row.get('Question_Text', ''))
-                        
-                        # 🎯 AI Solution Generator (Clean & Backend)
-                            st.markdown("---")
-                            if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
-                                with st.spinner("⏳ Analyzing and generating solution..."):
-                                    try:
-                                        # मॉडेलचे नाव डायरेक्ट निवडा (लिस्ट नको)
-                                        model = genai.GenerativeModel('gemini-1.5-flash') 
-                                        response = model.generate_content(full_question_text)
-                                        
-                                        # फक्त उत्तर दाखवा, लिस्ट नको
-                                        st.success("✅ Solution Generated!")
-                                        st.markdown(response.text)
-                                    except Exception as e:
-                                        st.error(f"❌ AI Error: {e}"):
-                            st.warning(f"प्रश्न सापडले नाहीत! कृपया खात्री करा की CSV मधील Category रकान्यात '{cat_name}' हेच नाव आहे. (तुमच्या फाईलमध्ये या कॅटेगरीचे {qna_df['Category'].unique()} हे ऑप्शन्स आहेत)")
+                                    st.markdown(full_question_text)
+                                    
+                                    # 🧠 AI Solution Generator Button
+                                    if st.button(f"🧠 Generate Tally-Format Solution", key=f"ai_{cat_name}_{q_idx}"):
+                                        with st.spinner("⏳ AI is calculating..."):
+                                            try:
+                                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                                prompt = f"Solve this Accountancy problem in Tally ERP table format: {full_question_text}"
+                                                response = model.generate_content(prompt)
+                                                st.success("✅ Solution Generated!")
+                                                st.markdown(response.text)
+                                            except Exception as e:
+                                                st.error(f"❌ AI Error: {e}")
+                        else:
+                            st.info(f"या भागात अजून प्रश्न नाहीत. (CSV मध्ये Category: {cat_name} तपासा!)")
             else:
-                st.error("⚠️ QnA डेटा लोड झालेला नाही.")                
+                st.error("⚠️ Failed to load QnA data.")                
         with tab4:
             st.markdown("<h3 style='font-size:22px;'>📄 Board Papers & Detailed Solutions</h3>", unsafe_allow_html=True)
             st.info("💡 **Previous Year Papers & Model Answers**")
