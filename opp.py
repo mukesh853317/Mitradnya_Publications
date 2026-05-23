@@ -364,9 +364,9 @@ if df is not None:
                 st.write("---")
                 for idx, row in chapter_qna.iterrows():
                     question_text = row.get('Question', f"प्रश्न {idx+1}")
-                    answer_text = row.get('Answer', "उत्तर दिलेले नाही.")
+                    answer_text = row.get('Answer', "Ans is not given.")
                     with st.expander(f"🔹 {question_text}"):
-                        st.markdown(f"**उत्तर:** {answer_text}")
+                        st.markdown(f"**Ans:** {answer_text}")
             else:
                 st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
         else:
