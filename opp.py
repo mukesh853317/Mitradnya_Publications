@@ -296,7 +296,7 @@ if df is not None:
                 st.info(f"💡 **Topic: Chapter {selected_chapter}**")
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
 
-        # ==========================================
+       # ==========================================
         # Tab 3: Chapter Q&A and AI Generator
         # ==========================================
         with tab3:
@@ -360,56 +360,22 @@ if df is not None:
                                 html_table += "</table><br>"
                                 st.markdown(html_table, unsafe_allow_html=True)
                             
-                            # 🎯 Tally-like AI Solution Generator Button
+                            # 🎯 AI Solution Generator
                             st.markdown("---")
-                            if st.button(f"🧠 Generate AI Solution (Tally Format)", key=f"btn_ai_{selected_chapter}_{q_idx}"):
-                                if not AI_AVAILABLE:
-                                    st.error("⚠️ AI Module 'google-generativeai' is not installed correctly in the Cloud. Please check the spelling in 'requirements.txt'.")
-                                elif not GEMINI_API_KEY:
-                                    st.error("⚠️ Gemini API Key is missing! Please add 'GEMINI_API_KEY' in Streamlit Secrets.")
-                                else:
-                                    with st.spinner("⏳ AI is calculating and generating Trading, P&L, and Balance Sheet... (This may take 10-15 seconds)"):
-                                        try:
-                                            st.markdown("---")
                             if st.button(f"🧠 Debug AI Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
                                 try:
-                                    # List all available models
                                     models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
                                     st.write("Available models:", models)
-                                    
-                                    # Pick the first one from the list automatically
                                     selected_model = models[0]
-                                    st.write(f"Using model: {selected_model}")
-                                    
                                     model = genai.GenerativeModel(selected_model)
                                     response = model.generate_content(full_question_text)
                                     st.success("✅ Solution Generated!")
                                     st.markdown(response.text)
                                 except Exception as e:
                                     st.error(f"❌ AI Error: {e}")
-                                            prompt = f"""
-                                            You are an expert Indian Commerce Teacher. 
-                                            Solve the following Accountancy problem accurately.
-                                            Present the output strictly in professional accounting tables (like Tally ERP format) using Markdown format.
-                                            Include:
-                                            1. Trading and Profit & Loss Account
-                                            2. Partners' Capital Account (if applicable)
-                                            3. Balance Sheet
-                                            
-                                            Make sure to include properly aligned 'Particulars | Amount ₹ | Particulars | Amount ₹' headers.
-                                            
-                                            Problem to solve:
-                                            {full_question_text}
-                                            """
-                                            response = model.generate_content(prompt)
-                                            st.success("✅ Solution Generated Successfully!")
-                                            st.markdown(response.text)
-                                        except Exception as e:
-                                            st.error(f"❌ AI Generation Failed: {e}")
-                                            
+                                    
                             if answer_text:
                                 st.markdown(f"**Manual Hint / Note:** \n{answer_text}")
-
                 else:
                     st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
             else:
