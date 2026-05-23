@@ -338,7 +338,7 @@ if df is not None:
                                             except Exception as e:
                                                 st.error(f"❌ AI Error: {e}")
                         else:
-                            st.info(f"Will Update Soon!)")
+                            st.info(f"Will Update Soon!")
             else:
                 st.error("⚠️ Failed to load QnA data.")                
         with tab4:
