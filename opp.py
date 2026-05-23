@@ -13,12 +13,6 @@ import os
 # ==========================================
 # 🛡️ AI Module Shield (ॲप क्रॅश होऊ नये म्हणून)
 # ==========================================
-try:
-    import google.generativeai as genai
-    AI_AVAILABLE = True
-except ModuleNotFoundError:
-    AI_AVAILABLE = False
-
 def main():
     if not check_login():
         return # जर लॉगिन नसेल तर पुढे काहीच लोड होणार नाही
@@ -28,6 +22,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+try:
+    import google.generativeai as genai
+    AI_AVAILABLE = True
+except ModuleNotFoundError:
+    AI_AVAILABLE = False
+
 # -----------------------------------------------------
 # 1. Premium Access Setup & API Keys
 # -----------------------------------------------------
