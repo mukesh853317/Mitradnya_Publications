@@ -299,6 +299,9 @@ if df is not None:
         # ==========================================
         # Tab 3: Chapter Q&A
         # ==========================================
+        # ==========================================
+        # Tab 3: Chapter Q&A
+        # ==========================================
         with tab3:
             st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A</h3>", unsafe_allow_html=True)
             
@@ -313,13 +316,12 @@ if df is not None:
                         with st.expander(f"Q {q_idx + 1}: {str(group.iloc[0].get('Question_Text', ''))[:50]}..."):
                             st.markdown("### 📝 Full Question:")
                             st.markdown(full_question_text)
-                            
                             st.markdown("---")
                             
                             if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
-                                with st.spinner("⏳ Analyzing..."):
+                                with st.spinner("⏳ Generating..."):
                                     try:
-                                        model = genai.GenerativeModel('gemini-1.5-flash')
+                                        model = genai.GenerativeModel('gemini-3.5-flash')
                                         response = model.generate_content(f"Solve this accountancy problem: {full_question_text}")
                                         st.markdown(response.text)
                                     except Exception as e:
@@ -328,27 +330,6 @@ if df is not None:
                     st.warning("या चॅप्टरसाठी प्रश्न उपलब्ध नाहीत.")
             else:
                 st.error("QnA डेटा लोड झाला नाही.")
-                
-                # 🎯 AI Solution Generator (Clean & Backend)
-                st.markdown("---")
-                if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
-                    with st.spinner("⏳ Analyzing and generating solution..."):
-                        try:
-                            # मॉडेलचे नाव डायरेक्ट निवडा (लिस्ट नको)
-                            model = genai.GenerativeModel('gemini-3.5-flash')
-                            response = model.generate_content(full_question_text)
-                            # फक्त उत्तर दाखवा, लिस्ट नको
-                                st.success("✅ Solution Generated!")
-                                st.markdown(response.text)
-    except Exception as e:
-        st.error(f"❌ AI Error: {e}")
-
-        if answer_text:
-            st.markdown(f"**Manual Hint / Note:** \n{answer_text}")
-        else:
-            st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
-        else:
-            st.error("⚠️ Failed to load QnA data. Please check the file.")
                          
         with tab4:
             st.markdown("<h3 style='font-size:22px;'>📄 Board Papers & Detailed Solutions</h3>", unsafe_allow_html=True)
