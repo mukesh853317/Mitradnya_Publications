@@ -300,42 +300,33 @@ if df is not None:
         # Tab 3: Chapter Q&A
         # ==========================================
         with tab3:
-            st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='font-size:22px;'>📓 Mitradnya Publication's Study Portal</h3>", unsafe_allow_html=True)
             
-            if qna_df is not None:
-                chapter_rows = qna_df[qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
-                
-                if not chapter_rows.empty:
-                    grouped = chapter_rows.groupby('Question_ID')
-                    for q_idx, (q_id, group) in enumerate(grouped):
-                        full_question_text = "\n\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
-                        
-                        with st.expander(f"Q {q_idx + 1}: {str(group.iloc[0].get('Question_Text', ''))[:50]}..."):
-                            st.markdown("### 📝 Full Question:")
-                            # जर प्रश्नात '|' असेल, तर आपण त्याला टेबलमध्ये बदलू
-                            st.markdown("### " + str(group.iloc[0].get('Question_Text', '')))
+            # तीन टॅब्स
+            cat_tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
+            categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
+            
+            for i, cat_tab in enumerate(cat_tabs):
+                with cat_tab:
+                    cat_name = categories[i]
+                    # डेटा फिल्टर करणे
+                    data = qna_df[qna_df['Category'].astype(str).str.strip() == cat_name]
+                    
+                    if not data.empty:
+                        for q_idx, group in data.groupby('Question_ID'):
+                            # प्रश्न मजकूर
+                            q_text = "\n".join(group['Question_Text'].astype(str))
                             
-                            # जर प्रश्नात '|' असेल तरच टेबल दाखवा
-                            if "|" in full_question_text:
-                                # ओळींना स्प्लिट करा
-                                rows = [x.split('|') for x in full_question_text.split('\n') if '|' in x]
-                                if rows:
-                                    # पहिले रो हेडर म्हणून वापरणे
-                                    header = [h.strip() for h in rows[0]]
-                                    data = [ [c.strip() for c in r] for r in rows[1:] ]
-                                    # इंडेक्स न दाखवता टेबल
-                                    st.table(pd.DataFrame(data, columns=header))
-                            else:
-                                st.write(full_question_text)
-                            
-                            if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
-                                with st.spinner("⏳ Generating..."):
+                            with st.expander(f"Question: {group.iloc[0]['Question_Text'][:40]}..."):
+                                # थेट 'st.write' वापरू, कारण ते टेबल आपोआप डिटेक्ट करते (Streamlit ला ते जास्त चांगलं समजतं)
+                                st.write(q_text)
+                                
+                                if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}"):
                                     try:
                                         model = genai.GenerativeModel('gemini-3.5-flash')
-                                        response = model.generate_content(f"Solve this accountancy problem: {full_question_text}")
-                                        st.markdown(response.text)
+                                        st.markdown(model.generate_content(f"Solve this: {q_text}").text)
                                     except Exception as e:
-                                        st.error(f"❌ AI Error: {e}")
+                                        st.error(f"AI Error: {e}")
                 else:
                     st.warning("या चॅप्टरसाठी प्रश्न उपलब्ध नाहीत.")
             else:
