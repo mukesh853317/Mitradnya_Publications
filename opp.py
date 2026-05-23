@@ -334,7 +334,7 @@ if df is not None:
                                             html_table += "<tr>"
                                             for col in t_row:
                                                 if r_idx == 0:
-                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
+                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; '>{col}</th>"
                                                 else:
                                                     html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                             html_table += "</tr>"
@@ -350,7 +350,7 @@ if df is not None:
                                     html_table += "<tr>"
                                     for col in t_row:
                                         if r_idx == 0:
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; '>{col}</th>"
                                         else:
                                             html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
@@ -367,7 +367,7 @@ if df is not None:
                                 else:
                                     with st.spinner("⏳ AI is calculating and generating Trading, P&L, and Balance Sheet... (This may take 10-15 seconds)"):
                                         try:
-                                            model = genai.GenerativeModel('gemini-1.5-pro')
+                                            model = genai.GenerativeModel('gemini-pro')
                                             prompt = f"""
                                             You are an expert Indian Commerce Teacher. 
                                             Solve the following Accountancy problem accurately.
