@@ -13,7 +13,7 @@ def check_login():
                 <style>
                 .login-box {
                     padding: 2rem;
-                    border-radius: 25px;
+                    border-radius: 20px;
                     border: 1px solid #e6e6e6;
                     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
                 }
