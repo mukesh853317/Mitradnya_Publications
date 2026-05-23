@@ -8,9 +8,10 @@ import random
 import streamlit.components.v1 as components
 import re
 import os
+import google.generativeai as genai
 
 # -----------------------------------------------------
-# 1. Premium Access Setup (तुमचे सिक्रेट पासवर्ड्स)
+# 1. Premium Access Setup & API Keys
 # -----------------------------------------------------
 VALID_KEYS = ["MITRADNYA-101", "MUKESH-PRO-2026", "VIP-STUDENT-99"]
 
@@ -29,6 +30,13 @@ try:
 except:
     EMAIL_PASSWORD = "" 
 
+# 🎯 Gemini AI Setup
+try:
+    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=GEMINI_API_KEY)
+except:
+    GEMINI_API_KEY = ""
+
 TEACHER_NAME = "Mitradnya Publication's"
 SECRET_EXAM_PIN = "MIT2026" 
 
@@ -39,7 +47,6 @@ def load_data():
             df = pd.read_csv('All in one.csv', encoding='utf-8')
         except UnicodeDecodeError:
             df = pd.read_csv('All in one.csv', encoding='cp1252')
-        # रकान्यांच्या नावांमधील फालतू स्पेसेस काढून टाकण्यासाठी
         df.columns = df.columns.str.strip()
         df.fillna("None", inplace=True) 
         return df
@@ -49,7 +56,6 @@ def load_data():
 
 df = load_data()
 
-# --- Improved Smart Function to Load QnA Data ---
 @st.cache_data
 def load_qna_data():
     try:
@@ -61,7 +67,6 @@ def load_qna_data():
         qna_df.columns = qna_df.columns.str.strip()
         qna_df = qna_df.astype(object)
         
-        # Identify blank spaces in Excel and fill them (Forward Fill)
         qna_df.replace(r'^\s*$', pd.NA, regex=True, inplace=True)
         qna_df['Question_Start'] = qna_df['Chapter_Name'].notna()
         qna_df['Question_ID'] = qna_df['Question_Start'].cumsum()
@@ -74,6 +79,7 @@ def load_qna_data():
         return None
 
 qna_df = load_qna_data()
+
 def send_detailed_email(receiver_email, student_name, div, roll, score, total, chapter, test_name, report_content, is_teacher=True):
     if is_teacher:
         subject = f"New Result: {student_name} ({div}-{roll}) - {score}/{total}"
@@ -96,17 +102,14 @@ def send_detailed_email(receiver_email, student_name, div, roll, score, total, c
         return True
     except: return False
 
-# --- CUSTOM CSS (Premium EdTech Theme - Fixed Emojis) ---
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
-    /* 1. App Background - Very subtle modern gradient */
     .stApp {
         background-color: var(--background-color);
         background-image: radial-gradient(circle at top right, rgba(79, 70, 229, 0.05), transparent),
                           radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.05), transparent);
     }
-
-    /* 2. Scrolling News Ticker - Adapts to Dark/Light Mode */
     .news-ticker {
         background: linear-gradient(90deg, rgba(79, 70, 229, 0.1), rgba(6, 182, 212, 0.1));
         color: var(--text-color);
@@ -118,83 +121,34 @@ st.markdown("""
         margin-bottom: 20px;
         box-shadow: 0px 4px 6px rgba(0,0,0,0.05);
     }
-
-    /* 3. Main Title - Fixed Emoji Rendering */
     h1, h2, h3 { 
-        color: var(--text-color) !important; /* डार्क/लाईट मोडमध्ये आपोआप ॲडजस्ट होईल आणि इमोजी रंगीत राहतील */
+        color: var(--text-color) !important; 
         text-align: center; 
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    h1 {
-        font-size: 2.6em !important;
-        font-weight: 900;
-        margin-bottom: 0px;
-        padding-bottom: 10px;
-    }
-
-    /* 4. Action Buttons (Modern Indigo) */
+    h1 { font-size: 2.6em !important; font-weight: 900; margin-bottom: 0px; padding-bottom: 10px; }
     div.stButton > button:first-child {
         background: linear-gradient(90deg, #4F46E5, #3B82F6);
-        color: white !important;
-        border: none;
-        border-radius: 8px;
-        padding: 12px 24px;
-        font-size: 16px;
-        font-weight: bold;
-        transition: all 0.3s ease;
-        box-shadow: 0px 4px 10px rgba(79, 70, 229, 0.3);
+        color: white !important; border: none; border-radius: 8px;
+        padding: 12px 24px; font-size: 16px; font-weight: bold;
+        transition: all 0.3s ease; box-shadow: 0px 4px 10px rgba(79, 70, 229, 0.3);
     }
     div.stButton > button:first-child:hover {
-        transform: translateY(-2px);
-        box-shadow: 0px 6px 15px rgba(79, 70, 229, 0.5);
+        transform: translateY(-2px); box-shadow: 0px 6px 15px rgba(79, 70, 229, 0.5);
     }
-
-    /* 5. Beautiful Transparent Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background-color: rgba(128, 128, 128, 0.05);
-        border-radius: 8px 8px 0px 0px;
-        padding: 12px 20px;
-        border: none;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: rgba(79, 70, 229, 0.1);
-        border-bottom: 3px solid #4F46E5;
-    }
-    /* Tab Text Color - explicitly handled to adapt */
-    .stTabs [aria-selected="true"] div[data-testid="stMarkdownContainer"] p {
-        color: #4F46E5 !important;
-        font-weight: 800;
-        font-size: 16px;
-    }
-
-    /* 6. Soft Card Effect for Options */
-    div.stRadio > div, div.stInfo, div.stSuccess, div.stWarning, div.stError { 
-        border-radius: 10px; 
-        box-shadow: 0px 2px 10px rgba(0,0,0,0.04); 
-    }
-    div.stRadio > div {
-        background-color: var(--secondary-background-color); 
-        padding: 15px; 
-        border-left: 5px solid #06B6D4; 
-        transition: transform 0.2s ease;
-    }
-    div.stRadio > div:hover {
-        transform: translateX(4px);
-        border-left: 5px solid #4F46E5; 
-    }
+    .stTabs [data-baseweb="tab-list"] { gap: 8px; }
+    .stTabs [data-baseweb="tab"] { background-color: rgba(128, 128, 128, 0.05); border-radius: 8px 8px 0px 0px; padding: 12px 20px; border: none; }
+    .stTabs [aria-selected="true"] { background-color: rgba(79, 70, 229, 0.1); border-bottom: 3px solid #4F46E5; }
+    .stTabs [aria-selected="true"] div[data-testid="stMarkdownContainer"] p { color: #4F46E5 !important; font-weight: 800; font-size: 16px; }
+    div.stRadio > div, div.stInfo, div.stSuccess, div.stWarning, div.stError { border-radius: 10px; box-shadow: 0px 2px 10px rgba(0,0,0,0.04); }
+    div.stRadio > div { background-color: var(--secondary-background-color); padding: 15px; border-left: 5px solid #06B6D4; transition: transform 0.2s ease; }
+    div.stRadio > div:hover { transform: translateX(4px); border-left: 5px solid #4F46E5; }
     </style>
     """, unsafe_allow_html=True)
 
-# -----------------------------------------------------
-# Sidebar (साईडबार डिझाईन आणि हेडिंग)
-# -----------------------------------------------------
 st.sidebar.markdown("<h2 style='text-align: left; font-size: 22px;'> 📚Mitradnya Publication's📚 </h2>", unsafe_allow_html=True)
 st.sidebar.markdown("---")
 
-# प्रीमियम स्टेटस दाखवणे
 if st.session_state.is_authenticated:
     st.sidebar.success("🌟 Premium Access Active")
 else:
@@ -205,10 +159,7 @@ if 'test_status' not in st.session_state:
 
 if df is not None:
     sidebar_disabled = st.session_state.test_status != 'not_started'
-    
-    # CSV मधील कॉलमचे अचूक नाव शोधणे ('No.' किंवा 'No')
     chapter_col = 'No.' if 'No.' in df.columns else 'No' if 'No' in df.columns else df.columns[0]
-    
     chapters = df[chapter_col].unique()
     selected_chapter = st.sidebar.selectbox("1. Select Chapter:", chapters, disabled=sidebar_disabled)
     
@@ -231,31 +182,18 @@ if df is not None:
     
     st.title("📚 Mitradnya Publication's Online Portal 📚")
     
-    # पळणारी न्यूज पट्टी (Marquee)
     st.markdown("<div class='news-ticker'><marquee behavior='scroll' direction='left' scrollamount='6'>🔥 Welcome to Mitradnya Publication's! | 🚀 Unlock Premium Features Today | 🎓 Best Study Material by Mitradnya Publication's | 📞 Need a Premium Key? Contact on: 9422152294</marquee></div>", unsafe_allow_html=True)
     
     st.markdown(f"<h3 style='font-size: 20px;'>📘 Topic: Chapter {selected_chapter}</h3>", unsafe_allow_html=True)
     st.write(f"**{selected_part} (20 Marks / 20 Minutes)**")
     
     if st.session_state.test_status == 'not_started':
+        tab1, tab2, tab3, tab4 = st.tabs(["📝 Exam Portal", "📖 Study Room", "📓 Chapter Q & A", "📄 Papers & Solutions"])
         
-        # येथे ४ नवीन टॅब्स बनवले आहेत 
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "📝 Exam Portal", 
-            "📖 Study Room", 
-            "📓 Chapter Q & A", 
-            "📄 Papers & Solutions"
-        ])
-        
-        # ==========================================
-        # टॅब १: परीक्षेचा भाग (Test Logic)
-        # ==========================================
         with tab1:
             if selected_part != "Test 1" and not st.session_state.is_authenticated:
                 st.error("🔒 Premium Test Locked")
                 st.warning("⚠️ This test is for Premium Students only. 'Test 1' is available for free practice.")
-                st.write("To unlock all tests, enter your Premium Access Key below:")
-                
                 test_key = st.text_input("🔑 Enter Premium Key:", key="test_key", type="password")
                 if st.button("Unlock All Tests 🚀"):
                     if test_key in VALID_KEYS:
@@ -266,7 +204,6 @@ if df is not None:
                         st.error("❌ Invalid Key! Contact Mitradnya Publication's to purchase a key.")
             else:
                 st.info("⚠️ Instruction: Please enter your correct details and the Exam PIN provided by Mitradnya Publication's.")
-                
                 student_name = st.text_input("👤 Full Name (e.g., Rahul Patil):")
                 student_div = st.text_input("🏫 Division (A/B/C):")
                 student_roll = st.text_input("🔢 Roll No (Numbers Only):")
@@ -274,12 +211,10 @@ if df is not None:
                 exam_pin_input = st.text_input("🔑 Exam PIN (Secret Password):", type="password")
                 
                 st.markdown("---")
-                
                 if st.button("🟢 Start Test", use_container_width=True):
                     email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+$"
                     is_valid_email = re.match(email_pattern, student_email)
                     is_valid_roll = student_roll.isdigit()
-                    
                     valid_domains = ["@gmail.com", "@yahoo.com", "@outlook.com", "@rediffmail.com"]
                     is_real_domain = any(student_email.lower().endswith(d) for d in valid_domains)
                     
@@ -295,12 +230,8 @@ if df is not None:
                         st.session_state.test_status = 'in_progress'
                         st.rerun()
                     
-        # ==========================================
-        # टॅब २: अभ्यासाची खोली (Study Room)
-        # ==========================================
         with tab2:
             st.markdown("<h3 style='font-size:22px;'>📖 Mitradnya's Interactive Study Room</h3>", unsafe_allow_html=True)
-            
             if str(selected_chapter) == "1" or "Final Accounts" in str(selected_chapter): 
                 try:
                     tools_df = pd.read_csv('Tools.csv', encoding='utf-8')
@@ -309,14 +240,11 @@ if df is not None:
                     
                     FREE_ADJS = ["Additional Capital", "Bad Debts"]
                     st.info(f"💡 Demo Access: You can view '{FREE_ADJS[0]}' and '{FREE_ADJS[1]}' for free.")
-                    
                     selected_adj = st.selectbox("🔍 Select Adjustment to Study & Practice:", adjustment_list)
                     
                     if selected_adj not in FREE_ADJS and not st.session_state.is_authenticated:
                         st.error("🔒 Premium Content Locked")
                         st.warning(f"⚠️ The visualization and interactive calculator for **{selected_adj}** are locked.")
-                        st.write("To unlock all study materials and calculators, enter your Premium Access Key below:")
-                        
                         study_key = st.text_input("🔑 Enter Premium Key:", key="study_key", type="password")
                         if st.button("Unlock Study Room 🚀"):
                             if study_key in VALID_KEYS:
@@ -347,27 +275,23 @@ if df is not None:
                             calculators.run_calculator(selected_adj)
                         except Exception:
                             st.warning("⏳ The selected adjustment is not yet added to the calculator.")
-
                 except Exception as e:
                     st.error(f"⚠️ Error loading Tools.csv: {e}")
-            
             elif str(selected_chapter) == "2" or "NPO" in str(selected_chapter):
                 st.info("💡 **Topic: Not for Profit Concern (NPO)**")
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
-                
             else:
                 st.info(f"💡 **Topic: Chapter {selected_chapter}**")
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
 
         # ==========================================
-        # Tab 3: Chapter Q&A and Practice Questions
+        # Tab 3: Chapter Q&A and AI Generator
         # ==========================================
         with tab3:
             st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A and Practice Questions</h3>", unsafe_allow_html=True)
             st.info(f"💡 **Topic: Chapter {selected_chapter}**")
             
             if qna_df is not None:
-                # Filter rows based on selected chapter
                 chapter_rows = qna_df[qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
                 
                 if not chapter_rows.empty:
@@ -378,6 +302,9 @@ if df is not None:
                         first_row = group.iloc[0]
                         main_title = str(first_row.get('Question_Text', ''))
                         display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
+                        
+                        # पूर्ण प्रश्न AI ला पाठवण्यासाठी एकत्र करणे
+                        full_question_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                         
                         with st.expander(f" Q {q_idx + 1}: {display_title}"):
                             table_data = []
@@ -399,14 +326,13 @@ if df is not None:
                                             html_table += "<tr>"
                                             for col in t_row:
                                                 if r_idx == 0:
-                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
+                                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
                                                 else:
                                                     html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                             html_table += "</tr>"
                                         html_table += "</table><br>"
                                         st.markdown(html_table, unsafe_allow_html=True)
                                         table_data = []
-                                    
                                     if line:
                                         st.markdown(line)
                             
@@ -416,28 +342,51 @@ if df is not None:
                                     html_table += "<tr>"
                                     for col in t_row:
                                         if r_idx == 0:
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
                                         else:
                                             html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
                                 html_table += "</table><br>"
                                 st.markdown(html_table, unsafe_allow_html=True)
                             
-                            # 🎯 नेहमी दिसणारे Generate Solution बटन
+                            # 🎯 Tally-like AI Solution Generator Button
                             st.markdown("---")
-                            if st.button(f"🧠 Generate Solution", key=f"btn_gen_{selected_chapter}_{q_idx}"):
-                                if answer_text:
-                                    st.success("✅ Solution Generated Successfully!")
-                                    st.markdown(f"**Answer / Hint:** \n{answer_text}")
+                            if st.button(f"🧠 Generate AI Solution (Tally Format)", key=f"btn_ai_{selected_chapter}_{q_idx}"):
+                                if not GEMINI_API_KEY:
+                                    st.error("⚠️ Gemini API Key is missing! Please add 'GEMINI_API_KEY' in Streamlit Secrets to use this feature.")
                                 else:
-                                    st.info("💡 Detailed solution for this question will be updated soon!")
+                                    with st.spinner("⏳ AI is calculating and generating Trading, P&L, and Balance Sheet... (This may take 10-15 seconds)"):
+                                        try:
+                                            model = genai.GenerativeModel('gemini-1.5-flash')
+                                            prompt = f"""
+                                            You are an expert Indian Commerce Teacher. 
+                                            Solve the following Accountancy problem accurately.
+                                            Present the output strictly in professional accounting tables (like Tally ERP format) using Markdown format.
+                                            Include:
+                                            1. Trading and Profit & Loss Account
+                                            2. Partners' Capital Account (if applicable)
+                                            3. Balance Sheet
+                                            
+                                            Make sure to include properly aligned 'Particulars | Amount ₹ | Particulars | Amount ₹' headers.
+                                            
+                                            Problem to solve:
+                                            {full_question_text}
+                                            """
+                                            response = model.generate_content(prompt)
+                                            st.success("✅ Solution Generated Successfully!")
+                                            st.markdown(response.text)
+                                        except Exception as e:
+                                            st.error(f"❌ AI Generation Failed: {e}")
+                                            
+                            # जर आधीपासून CSV मध्ये उत्तर असेल तर ते दाखवा
+                            if answer_text:
+                                st.markdown(f"**Manual Hint / Note:** \n{answer_text}")
+
                 else:
                     st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
             else:
                 st.error("⚠️ Failed to load QnA data. Please check the file.")
-        # ==========================================
-        # टॅब ४: पेपर्स आणि सोल्युशन्स (Papers & Solutions)
-        # ==========================================
+                
         with tab4:
             st.markdown("<h3 style='font-size:22px;'>📄 Board Papers & Detailed Solutions</h3>", unsafe_allow_html=True)
             st.info("💡 **Previous Year Papers & Model Answers**")
@@ -579,4 +528,3 @@ if df is not None:
             st.rerun()
 
     st.markdown("<br><hr><p style='text-align: center; color: var(--text-color); font-size: 16px;'>Developed with ❤️ by <b>Mitradnya Publication's (9422152294)</b></p>", unsafe_allow_html=True)
-
