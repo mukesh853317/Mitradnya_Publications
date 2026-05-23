@@ -328,7 +328,7 @@ if df is not None:
                                     if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}"):
                                         with st.spinner("⏳ Analyzing..."):
                                             try:
-                                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                                model = genai.GenerativeModel('gemini-3.5-flash')
                                                 response = model.generate_content(f"Solve this accountancy problem: {q_text}")
                                                 st.markdown(response.text)
                                             except Exception as e:
