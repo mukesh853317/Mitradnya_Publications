@@ -23,13 +23,15 @@ if 'test_status' not in st.session_state:
 @st.cache_data
 def load_all_data():
     try:
-        # 1. Load Main CSV
-        df = pd.read_csv('All in one.csv')
-        df.columns = df.columns.str.strip()
+        # ॲपला फाईलचा नेमका पत्ता कळावा म्हणून हे करा
+        current_dir = os.path.dirname(__file__)
+        csv1_path = os.path.join(current_dir, 'All in one.csv')
+        csv2_path = os.path.join(current_dir, 'QnA.csv')
         
-        # 2. Load and Prepare QnA CSV
-        qna_df = pd.read_csv('QnA.csv')
-        qna_df.columns = qna_df.columns.str.strip()
+        df = pd.read_csv(csv1_path)
+        qna_df = pd.read_csv(csv2_path)
+        
+        # ... बाकीचा कोड तसाच ठेवा
         qna_df['Chapter_Name'] = qna_df['Chapter_Name'].ffill()
         qna_df['Category'] = qna_df['Category'].ffill()
         return df, qna_df
@@ -72,7 +74,7 @@ if df is not None:
                                         try:
                                             # API Key Setup
                                             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-                                            model = genai.GenerativeModel('gemini-1.5-flash')
+                                            model = genai.GenerativeModel('gemini-3.5-flash')
                                             response = model.generate_content(f"Solve this accountancy problem in Tally format: {row['Question_Text']}")
                                             st.markdown(response.text)
                                         except Exception as e:
