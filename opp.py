@@ -59,11 +59,13 @@ def load_qna_data():
             qna_df = pd.read_csv('QnA.csv', encoding='cp1252', on_bad_lines='skip')
         
         qna_df.columns = qna_df.columns.str.strip()
+        
+        # जादू: सर्व डेटाला आधी 'Text' बनवणे, म्हणजे float64 चा एरर येणार नाही
+        qna_df = qna_df.astype(object) 
         qna_df.fillna("माहिती उपलब्ध नाही", inplace=True) 
         return qna_df
     except Exception as e:
-        # ही जादूची ओळ आपल्याला खरा प्रॉब्लेम सांगेल:
-        st.error(f"🔍 Technical Error Details: {e}") 
+        st.error(f"🔍 Technical Error Details: {e}")
         return None
 
 qna_df = load_qna_data()
@@ -360,22 +362,26 @@ if df is not None:
             st.info(f"💡 **Topic: Chapter {selected_chapter}**")
             
             if qna_df is not None:
-                qna_chapter_col = 'No.' if 'No.' in qna_df.columns else qna_df.columns[0]
-                chapter_qna = qna_df[qna_df[qna_chapter_col] == selected_chapter]
+                # तुमच्या फाईलमधील चॅप्टरचा रकाना
+                qna_chapter_col = 'Chapter_Name' if 'Chapter_Name' in qna_df.columns else qna_df.columns[0]
+                
+                # निवडलेला चॅप्टर मॅच करणे
+                chapter_qna = qna_df[qna_df[qna_chapter_col].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
                 
                 if not chapter_qna.empty:
                     st.write("---")
                     for idx, row in chapter_qna.iterrows():
-                        question_text = row.get('Question', f"प्रश्न {idx+1}")
-                        answer_text = row.get('Answer', "उत्तर दिलेले नाही.")
+                        # तुमच्या नवीन CSV नुसार रकान्यांची अचूक नावे
+                        question_text = row.get('Question_Text', f"प्रश्न {idx+1}")
+                        answer_text = row.get('Answer_or_Hint', "उत्तर दिलेले नाही.")
                         
                         with st.expander(f"🔹 {question_text}"):
-                            st.markdown(f"**उत्तर:** {answer_text}")
+                            st.markdown(f"**उत्तर / हिंट:** {answer_text}")
                 else:
                     st.warning("⏳ Questions for this chapter will be updated soon! (Stay Tuned)")
             else:
-                st.error("⚠️ The QnA.csv file was not found in the system. Please check the file.")
-           
+                st.error("⚠️ The QnA.csv file was not found in the system. Please check the file.")                
+                   
         # ==========================================
         # टॅब ४: पेपर्स आणि सोल्युशन्स (Papers & Solutions)
         # ==========================================
