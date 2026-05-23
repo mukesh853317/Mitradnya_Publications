@@ -324,6 +324,8 @@ if df is not None:
                                 full_question_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                                 
                                 with st.expander(f"Q {q_idx + 1}: {main_title[:50]}..."):
+                                  # इथे आपण 'full_question_text' वापरूया म्हणजे पूर्ण प्रश्न दिसेल
+                                    st.markdown("### Question:")
                                     st.markdown(full_question_text)
                                     
                                     # 🧠 AI Solution Generator Button
