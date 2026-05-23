@@ -313,8 +313,18 @@ if df is not None:
                         with st.expander(f"Q {q_idx + 1}: {str(group.iloc[0].get('Question_Text', ''))[:50]}..."):
                             st.markdown("### 📝 Full Question:")
                             # जर प्रश्नात '|' असेल, तर आपण त्याला टेबलमध्ये बदलू
+                            st.markdown("### " + str(group.iloc[0].get('Question_Text', '')))
+                            
+                            # जर प्रश्नात '|' असेल तरच टेबल दाखवा
                             if "|" in full_question_text:
-                                st.table(pd.DataFrame([x.split('|') for x in full_question_text.split('\n') if '|' in x]))
+                                # ओळींना स्प्लिट करा
+                                rows = [x.split('|') for x in full_question_text.split('\n') if '|' in x]
+                                if rows:
+                                    # पहिले रो हेडर म्हणून वापरणे
+                                    header = [h.strip() for h in rows[0]]
+                                    data = [ [c.strip() for c in r] for r in rows[1:] ]
+                                    # इंडेक्स न दाखवता टेबल
+                                    st.table(pd.DataFrame(data, columns=header))
                             else:
                                 st.write(full_question_text)
                             
