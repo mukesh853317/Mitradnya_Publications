@@ -322,12 +322,12 @@ if df is not None:
                                 full_q = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                                 
                                 with st.expander(f"Q {q_idx + 1}: {group.iloc[0]['Question_Text'][:40]}..."):
-                                    st.write(full_q)
+                                    st.write(q_text)
                                     
                                     if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}"):
                                         with st.spinner("⏳ Generating..."):
                                             try:
-                                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                                model = genai.GenerativeModel('gemini-3.5-flash')
                                                 response = model.generate_content(f"Solve this: {full_q}")
                                                 st.markdown(response.text)
                                             except Exception as e:
