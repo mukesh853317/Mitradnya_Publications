@@ -357,34 +357,37 @@ if df is not None:
         # ==========================================
         # टॅब ३: प्रश्न उत्तरे आणि प्रॅक्टिस (Chapter Q & A)
         # ==========================================
-        if not chapter_qna.empty:
+        with tab3:
+            st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A and Practice Questions</h3>", unsafe_allow_html=True)
+            st.info(f"💡 **Topic: Chapter {selected_chapter}**")
+            
+            if qna_df is not None:
+                qna_chapter_col = 'Chapter_Name' if 'Chapter_Name' in qna_df.columns else qna_df.columns[0]
+                chapter_qna = qna_df[qna_df[qna_chapter_col].astype(str).str.contains(str(selected_chapter), case=False, na=False)]
+                
+                if not chapter_qna.empty:
                     st.write("---")
                     for idx, row in chapter_qna.iterrows():
                         question_text = str(row.get('Question_Text', f"Qts {idx+1}"))
                         answer_text = str(row.get('Answer_or_Hint', "Ans is not given."))
                         
                         with st.expander(f"🔹 प्रश्न {idx+1}"):
-                            # जादू: प्रश्नातील मजकूर ओळींनुसार वेगळा करणे
                             lines = question_text.split('\n')
                             table_data = []
                             
                             for line in lines:
                                 if '|' in line:
-                                    # जर ओळीत '|' असेल, तर तो 'Trial Balance' च्या टेबलचा भाग मानणे
                                     table_data.append([col.strip() for col in line.split('|')])
                                 else:
-                                    # जर आधी टेबलचा डेटा गोळा झाला असेल, तर तो इथे 'टेबल' स्वरूपात प्रिंट करणे
                                     if table_data:
                                         tb_df = pd.DataFrame(table_data)
-                                        tb_df.fillna("", inplace=True) # रिकाम्या जागा लपवणे
+                                        tb_df.fillna("", inplace=True)
                                         st.table(tb_df)
-                                        table_data = [] # टेबल प्रिंट झाल्यावर मेमरी रिकामी करणे
+                                        table_data = [] 
                                     
-                                    # नॉर्मल मजकूर (उदा. Adjustments) प्रिंट करणे
                                     if line.strip():
                                         st.markdown(f"{line.strip()}")
                                         
-                            # जर शेवटी काही टेबलचा डेटा उरला असेल, तर तो प्रिंट करणे
                             if table_data:
                                 tb_df = pd.DataFrame(table_data)
                                 tb_df.fillna("", inplace=True)
@@ -393,8 +396,9 @@ if df is not None:
                             st.markdown("---")
                             st.markdown(f"**Ans / Hint:** \n{answer_text}")
                 else:
-                    st.warning("⏳ The questions for this chapter will be updated soon! (Stay Tuned)")                
-                   
+                    st.warning("⏳ The questions for this chapter will be updated soon! (Stay Tuned)")
+            else:
+                st.error("⚠️ QnA The data could not be loaded. Please check the file.")
         # ==========================================
         # टॅब ४: पेपर्स आणि सोल्युशन्स (Papers & Solutions)
         # ==========================================
