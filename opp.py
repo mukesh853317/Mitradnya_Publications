@@ -62,10 +62,11 @@ def load_qna_data():
         qna_df.fillna("माहिती उपलब्ध नाही", inplace=True) 
         return qna_df
     except Exception as e:
+        # ही जादूची ओळ आपल्याला खरा प्रॉब्लेम सांगेल:
+        st.error(f"🔍 Technical Error Details: {e}") 
         return None
 
 qna_df = load_qna_data()
-
 def send_detailed_email(receiver_email, student_name, div, roll, score, total, chapter, test_name, report_content, is_teacher=True):
     if is_teacher:
         subject = f"New Result: {student_name} ({div}-{roll}) - {score}/{total}"
