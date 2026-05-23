@@ -303,14 +303,12 @@ if df is not None:
             st.markdown("<h3 style='font-size:22px;'>📓 Mitradnya Publication's Study Portal</h3>", unsafe_allow_html=True)
             
             if qna_df is not None:
-                # तीन मुख्य कॅटेगरीचे टॅब्स (तुमच्या CSV मधील स्पेलिंगशी हे तंतोतंत जुळायला हवे)
                 cat_tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
                 categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
                 
                 for i, cat_tab in enumerate(cat_tabs):
                     with cat_tab:
                         cat_name = categories[i]
-                        # फिल्टरिंग (स्पेस किंवा अंडरस्कोरची काळजी घ्या)
                         filtered_rows = qna_df[
                             (qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)) & 
                             (qna_df['Category'].astype(str).str.strip() == cat_name)
@@ -321,15 +319,17 @@ if df is not None:
                             for q_idx, (q_id, group) in enumerate(grouped):
                                 first_row = group.iloc[0]
                                 main_title = str(first_row.get('Question_Text', ''))
+                                # पूर्ण प्रश्न मजकूर तयार करणे
                                 full_question_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                                 
                                 with st.expander(f"Q {q_idx + 1}: {main_title[:50]}..."):
-                                     st.markdown(full_question_text)
-                                        full_question_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
+                                    st.markdown("### Question:")
+                                    st.markdown(full_question_text)
                                     
-                                    # 🧠 AI Solution Generator Button
-                                    if st.button(f"🧠 Generate Solution", key=f"ai_{cat_name}_{q_idx}"):
-                                        with st.spinner("⏳ Getting Solution..."):
+                                    st.markdown("---")
+                                    
+                                    if st.button(f"🧠 Generate Solution", key=f"btn_ai_{cat_name}_{q_idx}"):
+                                        with st.spinner("⏳ Generating Solution..."):
                                             try:
                                                 model = genai.GenerativeModel('gemini-3.5-flash')
                                                 prompt = f"Solve this Accountancy problem in Tally ERP table format: {full_question_text}"
@@ -339,7 +339,7 @@ if df is not None:
                                             except Exception as e:
                                                 st.error(f"❌ AI Error: {e}")
                         else:
-                            st.info(f"Will Update Soon!")
+                            st.info(f"Will Update Soon!)")
             else:
                 st.error("⚠️ Failed to load QnA data.")                
         with tab4:
