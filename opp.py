@@ -357,17 +357,14 @@ if df is not None:
         with tab3:
         st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A and Practice Questions</h3>", unsafe_allow_html=True)
         st.info(f"💡 **Topic: Chapter {selected_chapter}**")
-        
         if qna_df is not None:
             qna_chapter_col = 'No.' if 'No.' in qna_df.columns else qna_df.columns[0]
             chapter_qna = qna_df[qna_df[qna_chapter_col] == selected_chapter]
-            
             if not chapter_qna.empty:
                 st.write("---")
                 for idx, row in chapter_qna.iterrows():
                     question_text = row.get('Question', f"प्रश्न {idx+1}")
                     answer_text = row.get('Answer', "उत्तर दिलेले नाही.")
-                    
                     with st.expander(f"🔹 {question_text}"):
                         st.markdown(f"**उत्तर:** {answer_text}")
             else:
