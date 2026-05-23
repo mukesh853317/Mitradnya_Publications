@@ -296,41 +296,46 @@ if df is not None:
                 st.info(f"💡 **Topic: Chapter {selected_chapter}**")
                 st.warning("⏳ Thanks for Visit!!! 🙏. This section will be Updated Very Soon!!! 🚀. Stay tuned to Mitradnya Publication's!!! 🎓")
 
-        # ==========================================
-        # Tab 3: Chapter Q&A
-        # ==========================================
+        # ==========================================================
+        # Tab 3: Chapter Q&A - 100% Corrected Block
+        # ==========================================================
         with tab3:
-            st.markdown("<h3 style='font-size:22px;'>📓 Mitradnya Publication's Study Portal</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='font-size:22px;'>📓 Chapter-wise Q&A</h3>", unsafe_allow_html=True)
             
-            # तीन टॅब्स
-            cat_tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
-            categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
-            
-            for i, cat_tab in enumerate(cat_tabs):
-                with cat_tab:
-                    cat_name = categories[i]
-                    # डेटा फिल्टर करणे
-                    data = qna_df[qna_df['Category'].astype(str).str.strip() == cat_name]
-                    
-                    if not data.empty:
-                        for q_idx, group in data.groupby('Question_ID'):
-                            # प्रश्न मजकूर
-                            q_text = "\n".join(group['Question_Text'].astype(str))
-                            
-                            with st.expander(f"Question: {group.iloc[0]['Question_Text'][:40]}..."):
-                                # थेट 'st.write' वापरू, कारण ते टेबल आपोआप डिटेक्ट करते (Streamlit ला ते जास्त चांगलं समजतं)
-                                st.write(q_text)
+            if qna_df is not None:
+                cat_tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
+                categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
+                
+                for i, cat_tab in enumerate(cat_tabs):
+                    with cat_tab:
+                        cat_name = categories[i]
+                        # डेटा फिल्टरिंग
+                        filtered_df = qna_df[
+                            (qna_df['Chapter_Name_Filled'].astype(str).str.contains(str(selected_chapter), case=False, na=False)) & 
+                            (qna_df['Category'].astype(str).str.strip() == cat_name)
+                        ]
+                        
+                        if not filtered_df.empty:
+                            grouped = filtered_df.groupby('Question_ID')
+                            for q_idx, (q_id, group) in enumerate(grouped):
+                                # प्रश्न मजकूर तयार करणे
+                                full_q = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                                 
-                                if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}"):
-                                    try:
-                                        model = genai.GenerativeModel('gemini-3.5-flash')
-                                        st.markdown(model.generate_content(f"Solve this: {q_text}").text)
-                                    except Exception as e:
-                                        st.error(f"AI Error: {e}")
+                                with st.expander(f"Q {q_idx + 1}: {group.iloc[0]['Question_Text'][:40]}..."):
+                                    st.write(full_q)
+                                    
+                                    if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}"):
+                                        with st.spinner("⏳ Generating..."):
+                                            try:
+                                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                                response = model.generate_content(f"Solve this: {full_q}")
+                                                st.markdown(response.text)
+                                            except Exception as e:
+                                                st.error(f"Error: {e}")
+                        else:
+                            st.info("NO MORE QUESTIONS.")
             else:
-                st.warning("या चॅप्टरसाठी प्रश्न उपलब्ध नाहीत.")
-            else:
-                st.error("QnA डेटा लोड झाला नाही.")
+                st.error("Will Update Soon!.")
                          
         with tab4:
             st.markdown("<h3 style='font-size:22px;'>📄 Board Papers & Detailed Solutions</h3>", unsafe_allow_html=True)
