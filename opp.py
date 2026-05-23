@@ -328,21 +328,20 @@ if df is not None:
                     st.warning("या चॅप्टरसाठी प्रश्न उपलब्ध नाहीत.")
             else:
                 st.error("QnA डेटा लोड झाला नाही.")
-                            
-                            # 🎯 AI Solution Generator (Clean & Backend)
-                            st.markdown("---")
-                            if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
-                                with st.spinner("⏳ Analyzing and generating solution..."):
-                                    try:
-                                        # मॉडेलचे नाव डायरेक्ट निवडा (लिस्ट नको)
-                                        model = genai.GenerativeModel('gemini-3.5-flash') 
-                                        response = model.generate_content(full_question_text)
-                                        
-                                        # फक्त उत्तर दाखवा, लिस्ट नको
-                                        st.success("✅ Solution Generated!")
-                                        st.markdown(response.text)
-                                    except Exception as e:
-                                        st.error(f"❌ AI Error: {e}")
+                
+                # 🎯 AI Solution Generator (Clean & Backend)
+                st.markdown("---")
+                if st.button(f"🧠 Generate Solution", key=f"btn_ai_{selected_chapter}_{q_idx}"):
+                with st.spinner("⏳ Analyzing and generating solution..."):
+                try:
+                # मॉडेलचे नाव डायरेक्ट निवडा (लिस्ट नको)
+                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    response = model.generate_content(full_question_text)
+                    # फक्त उत्तर दाखवा, लिस्ट नको
+                    st.success("✅ Solution Generated!")
+                    st.markdown(response.text)
+                except Exception as e:
+                    st.error(f"❌ AI Error: {e}")
                                     
                             if answer_text:
                                 st.markdown(f"**Manual Hint / Note:** \n{answer_text}")
