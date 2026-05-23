@@ -273,9 +273,9 @@ if df is not None:
                         
                         st.markdown("---")
                         if os.path.exists(img_file):
-                            st.image(img_file, caption=f"Visualization: {selected_adj} by Mitradnya Publication", use_container_width=True)
+                            st.image(img_file, caption=f"Visualization: {selected_adj} by Mitradnya Publication's", use_container_width=True)
                         elif os.path.exists(img_file_alt):
-                            st.image(img_file_alt, caption=f"Visualization: {selected_adj} by Mitradnya Publication", use_container_width=True)
+                            st.image(img_file_alt, caption=f"Visualization: {selected_adj} by Mitradnya Publication's", use_container_width=True)
                         else:
                             st.error("⚠️ Image Not Found in the system.")
                             st.warning(f"🔎 System checked for: **`{img_file}`**")
