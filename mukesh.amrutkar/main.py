@@ -1,7 +1,11 @@
 import streamlit as st
 from utils import auth
-# तिन्ही पोर्टल्स इम्पोर्ट करा (जर फाईल्स नसतील तर बनवून ठेवा)
-from portals import student, admin, parent 
+# सुरक्षित इम्पोर्ट (जर एखादी फाईल सापडली नाही तर ॲप क्रॅश होणार नाही)
+try:
+    from portals import student, admin, parent
+except ModuleNotFoundError as e:
+    st.error(f"Error: Portals File Not Found: {e}")
+    st.stop() 
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
