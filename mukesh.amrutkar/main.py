@@ -1,7 +1,7 @@
 import streamlit as st
 from utils import auth
 # सर्व 'import' स्टेटमेंट फाईलच्या सुरुवातीलाच ठेवा
-from portals import student, admin, parent 
+from portals import student 
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
