@@ -6,7 +6,10 @@ import google.generativeai as genai
 # 🔴 हे नवीन लिंक ॲड करा (utils फोल्डरमधून quiz_manager फाईल आणण्यासाठी)
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import quiz_manager
+try:
+    from utils import quiz_manager
+except ImportError:
+    pass # जर utils फोल्डर किंवा फाईल नसेल तर एरर येऊ नये म्हणून
 
 # १. तुमची डिझाईन फाईल इथे इम्पोर्ट करा (तुम्ही बनवलेली design_utils.py फाईल त्याच फोल्डरमध्ये असावी)
 try:
@@ -46,12 +49,13 @@ def show_student_dashboard():
     df['Category'] = df['Category'].ffill()
 
     categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
-    tab_names = ["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
+    tab_names = ["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical", "🎯 Objective Test"]
     
     tabs = st.tabs(tab_names)
 
-    for i, tab in enumerate(tabs):
-        with tab:
+    # 🔴 पहिले ३ टॅब जुन्या पद्धतीने लोड करा (For Loop मध्ये)
+    for i in range(3):
+        with tabs[i]:
             cat_name = categories[i]
             cat_df = df[df['Category'].astype(str).str.strip() == cat_name]
             
@@ -117,19 +121,14 @@ def show_student_dashboard():
                     st.markdown("---")
                     
                     # AI जनरेट सोल्युशन स्ट्रीमिंगसह (Typewriter Effect)
-                    # type="primary" मुळे बटण उठून दिसेल
                     if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
                         if answer_text:
                             st.info(f"💡 **Hint:** {answer_text}")
                             
                         with st.spinner("⏳ Generating Solutions..."):
                             try:
-                                # तुम्ही वापरत असलेले मॉडेल (gemini-3.5-flash हे फास्ट आहे)
-                                # जर हे मॉडेल एरर देत असेल तर 'gemini-1.5-flash' वापरून पहा
                                 model = genai.GenerativeModel('gemini-3.5-flash') 
                                 
-                                # 🔴 मुख्य बदल: request_options={"timeout": 600} 
-                                # यामुळे AI ला गणित सोडवण्यासाठी पुरेसा वेळ मिळेल आणि 504 एरर येणार नाही
                                 response = model.generate_content(
                                     f"Solve this accountancy problem in detail step-by-step:\n\n{q_text}", 
                                     stream=True,
@@ -140,7 +139,6 @@ def show_student_dashboard():
                                 res_box = st.empty()
                                 full_text = ""
                                 
-                                # लाईव्ह टायपिंग इफेक्ट
                                 for chunk in response:
                                     full_text += chunk.text
                                     res_box.markdown(full_text + " ▌")
@@ -148,3 +146,26 @@ def show_student_dashboard():
                                 res_box.markdown(full_text)
                             except Exception as e:
                                 st.error(f"AI Error: {e}")
+
+    # 🔴 ४था टॅब इथे लोड करा (लूपच्या बाहेर)
+    with tabs[3]:
+        st.write("---")
+        # इथे आपण सर्व चॅप्टर्सचे नाव दाखवण्यासाठी ड्रॉपडाऊन (Selectbox) दिला आहे
+        # किंवा तुम्ही डायरेक्ट "Chapter 1" असेही देऊ शकता
+        if 'quiz_manager' in globals() and hasattr(quiz_manager, 'load_objective_test'):
+            # तुमच्या Objectives.csv मधील 'No' कॉलममधील युनिक चॅप्टर्सची नावे मिळवण्यासाठी:
+            obj_csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
+            if os.path.exists(obj_csv_path):
+                obj_df = pd.read_csv(obj_csv_path)
+                # 'No' कॉलममध्ये जे चॅप्टर्सचे नाव आहेत, ते ड्रॉपडाऊनमध्ये दाखवा
+                chapter_list = obj_df['No'].astype(str).unique().tolist()
+                
+                selected_chap = st.selectbox("📝 Select Chapter for Test:", chapter_list)
+                st.write("---")
+                
+                # निवडलेल्या चॅप्टरनुसार टेस्ट लोड करा
+                quiz_manager.load_objective_test(selected_chap)
+            else:
+                st.warning("⚠️ Objectives.csv File Not Found in data folder!")
+        else:
+             st.error("⚠️ quiz_manager.py file not found in utils folder.")
