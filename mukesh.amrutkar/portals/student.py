@@ -13,13 +13,14 @@ def show_student_dashboard():
     # १. डेटा लोड करणे
     df = pd.read_csv(csv_path)
     
-    # २. डेटा क्लीनिंग
+    # २. 🔴 सर्वात महत्त्वाचा बदल: ffill करण्याआधी 'Question_ID' तयार करा!
+    # जिथे Chapter_Name रिकामा नाही, तिथून नवीन प्रश्न सुरू होतो.
+    df['is_main_question'] = df['Chapter_Name'].notna() & (df['Chapter_Name'].astype(str).str.strip() != '')
+    df['Question_ID'] = df['is_main_question'].cumsum()
+
+    # ३. आता डेटा क्लीनिंग (ffill) करा, जेणेकरून टॅब फिल्टरिंग काम करेल
     df['Chapter_Name'] = df['Chapter_Name'].ffill()
     df['Category'] = df['Category'].ffill()
-    
-    # ३. नवीन प्रश्न ओळखण्यासाठी ग्रुपिंग (Question_ID तयार करणे)
-    df['is_main_question'] = df['Chapter_Name'].notna() & df['Category'].notna()
-    df['Question_ID'] = df['is_main_question'].cumsum()
 
     categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
     tab_names = ["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
@@ -37,6 +38,7 @@ def show_student_dashboard():
                 continue
             
             st.write("---")
+            # आता हे बरोबर एका प्रश्नाचे गट पाडेल
             grouped = cat_df.groupby('Question_ID')
             
             for q_idx, (q_id, group) in enumerate(grouped):
@@ -46,7 +48,7 @@ def show_student_dashboard():
                 display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
                 
                 # एक्सपँडर (Expander)
-                with st.expander(f"Q. {q_idx + 1}: {display_title}"):
+                with st.expander(f" Q. {q_idx + 1}: {display_title}"):
                     table_data = []
                     answer_text = ""
                     
@@ -96,7 +98,6 @@ def show_student_dashboard():
                     
                     # 🎯 नेहमी दिसणारे Generate Solution बटन
                     st.markdown("---")
-                    # बटण की (Key) युनिक करण्यासाठी 'categories[i]' चा वापर
                     if st.button(f"🧠 Generate Solution", key=f"btn_gen_{categories[i]}_{q_idx}"):
                         if answer_text:
                             st.success("✅ Solution Generated Successfully!")
