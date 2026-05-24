@@ -1,28 +1,26 @@
 import streamlit as st
 from utils import auth
+# सर्व 'import' स्टेटमेंट फाईलच्या सुरुवातीलाच ठेवा
+from portals import student, admin, parent 
 
-# सर्वात आधी हे चेक करा (हे खूप महत्त्वाचे आहे)
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
 def main():
-    # आता 'if' कंडीशन वापरा, एरर येणार नाही
     if not st.session_state.logged_in:
         auth.show_login()
     else:
         st.sidebar.success(f"Welcome, {st.session_state.username}!")
         role = st.session_state.role
         
+        # आता फक्त इथून फंक्शन कॉल करा (import नाही)
         if role == "Admin":
-            st.write("Welcome Admin! Manage your Publication here.")
+            admin.show_admin_panel()
         elif role == "Student":
-            from portals import student  # हे पोर्टल इम्पोर्ट करा
-            student.show_student_dashboard()  # हे फंक्शन रन करा
-            
+            student.show_student_dashboard()
         elif role == "Parent":
-            st.write("Welcome Parent! Monitor your child's progress.")
+            parent.show_parent_dashboard()
             
-        # लॉगआउट बटण
         if st.sidebar.button("Logout"):
             st.session_state.logged_in = False
             st.rerun()
