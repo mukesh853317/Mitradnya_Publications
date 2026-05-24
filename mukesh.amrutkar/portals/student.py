@@ -100,11 +100,16 @@ def show_student_dashboard():
                         with st.spinner("⏳ Generating Solutions..."):
                             try:
                                 # तुम्ही वापरत असलेले मॉडेल
-                                model = genai.GenerativeModel('gemini-3.5-pro') 
+                                model = genai.GenerativeModel('gemini-3.5-flash') 
                                 
-                                # stream=True मुळे उत्तर लगेच टाईप व्हायला सुरुवात होईल
-                                response = model.generate_content(f"Solve this accountancy problem in detail:\n\n{q_text}", stream=True)
-                                
+                                # 🔴 मुख्य बदल: request_options={"timeout": 600} 
+                                # यामुळे AI ला गणित सोडवण्यासाठी पुरेसा वेळ मिळेल आणि 504 एरर येणार नाही
+                                response = model.generate_content(
+                                    f"Solve this accountancy problem in detail step-by-step:\n\n{q_text}", 
+                                    stream=True,
+                                    request_options={"timeout": 600}
+                                )
+                                                                
                                 st.markdown("### 📝 Generated Solution:")
                                 res_box = st.empty()
                                 full_text = ""
