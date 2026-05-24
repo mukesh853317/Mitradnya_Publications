@@ -12,68 +12,100 @@ def show_student_dashboard():
         return
 
     df = pd.read_csv(csv_path)
-
-    # Column names clean करणे
     df.columns = df.columns.str.strip()
 
-    # Missing values fill करणे
+    # रिकामे values fill
     df['Chapter_Name'] = df['Chapter_Name'].ffill()
     df['Category'] = df['Category'].ffill()
-
-    # Question text clean
     df['Question_Text'] = df['Question_Text'].fillna('').astype(str).str.strip()
     df['Answer_or_Hint'] = df['Answer_or_Hint'].fillna('').astype(str).str.strip()
 
-    # ज्या row मध्ये "|" नाही तो main question
-    df['is_main_question'] = ~df['Question_Text'].str.contains(r'\|', regex=True)
+    # नवीन question detect करणे:
+    # ज्या row ला Chapter_Name + Category आहे आणि Question_Text आहे ती main row
+    df['is_main_question'] = (
+        df['Chapter_Name'].notna() &
+        df['Category'].notna() &
+        (df['Question_Text'] != '')
+    )
 
-    # प्रत्येक main question ला unique id
     df['Question_ID'] = df['is_main_question'].cumsum()
 
     categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
-    tab_labels = ["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
-
-    tabs = st.tabs(tab_labels)
+    tab_names = ["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
+    tabs = st.tabs(tab_names)
 
     for i, tab in enumerate(tabs):
         with tab:
             cat_df = df[df['Category'].str.strip() == categories[i]]
 
             if cat_df.empty:
-                st.info(f"No data found for {categories[i]}")
+                st.info("No questions available.")
                 continue
 
             grouped = cat_df.groupby('Question_ID', sort=False)
 
             for q_id, group in grouped:
-                main_rows = group[group['is_main_question']]
-                table_rows = group[~group['is_main_question']]
+                group = group.reset_index(drop=True)
 
-                if main_rows.empty:
-                    continue
+                # main question
+                main_question = group.iloc[0]['Question_Text']
+                answer_hint = group.iloc[0]['Answer_or_Hint']
 
-                question_text = main_rows.iloc[0]['Question_Text']
-                answer_text = main_rows.iloc[0]['Answer_or_Hint']
+                st.markdown(f"### {main_question}")
 
-                st.markdown(f"### {question_text}")
+                normal_lines = []
+                table_data = []
+                table_headers = None
 
-                tb_data = []
-                for _, row in table_rows.iterrows():
-                    text = row['Question_Text']
-                    parts = [p.strip() for p in text.split('|') if p.strip()]
+                for idx in range(1, len(group)):
+                    text = str(group.loc[idx, 'Question_Text']).strip()
 
-                    if len(parts) == 3:
-                        tb_data.append(parts)
+                    if not text:
+                        continue
 
-                if tb_data:
-                    tb_df = pd.DataFrame(
-                        tb_data,
-                        columns=["Particulars", "Debit ₹", "Credit ₹"]
-                    )
-                    st.table(tb_df)
+                    if '|' in text:
+                        parts = [p.strip() for p in text.split('|')]
 
-                if answer_text:
-                    if st.button("🔍 Show Answer / Hint", key=f"btn_{q_id}_{i}"):
-                        st.success(f"**Solution / Hint:** {answer_text}")
+                        # रिकामे trailing columns remove
+                        while parts and parts[-1] == '':
+                            parts.pop()
+
+                        if len(parts) >= 2:
+                            if table_headers is None:
+                                table_headers = parts
+                            else:
+                                table_data.append(parts)
+                    else:
+                        normal_lines.append(text)
+
+                # Text भाग proper format मध्ये
+                for line in normal_lines:
+                    low = line.lower()
+
+                    if "trial balance" in low:
+                        st.markdown(f"**{line}**")
+
+                    elif "adjustment" in low:
+                        st.markdown("**Adjustments:**")
+
+                    elif line[:2].isdigit() or (
+                        len(line) > 1 and line[0].isdigit() and line[1] == '.'
+                    ):
+                        st.markdown(f"- {line}")
+
+                    else:
+                        st.write(line)
+
+                # Table render
+                if table_headers and table_data:
+                    valid_rows = [row for row in table_data if len(row) == len(table_headers)]
+                    if valid_rows:
+                        tb_df = pd.DataFrame(valid_rows, columns=table_headers)
+                        st.table(tb_df)
+
+                # Answer / Hint
+                if answer_hint:
+                    if st.button("🔍 Show Answer / Hint", key=f"btn_{i}_{q_id}"):
+                        st.success(answer_hint)
 
                 st.divider()
