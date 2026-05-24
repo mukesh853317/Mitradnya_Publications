@@ -3,14 +3,16 @@ import pandas as pd
 import os
 
 def show_login():
-    st.subheader("🔐 Login")
-    user = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    def show_login():
+    # फाईलचा पाथ नीट शोधण्यासाठी हा बदल करा
+    csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'students.csv')
     
-    if st.button("Login"):
-        # CSV फाईल वाचणे
-        df = pd.read_csv('data/students.csv')
-        
+    # चेक करा की फाईल अस्तित्वात आहे का
+    if os.path.exists(csv_path):
+        df = pd.read_csv(csv_path)
+    else:
+        st.error(f"Error: फाईल सापडली नाही! {csv_path}")
+        return        
         # चेक करणे: युजर आणि पासवर्ड जुळतो का?
         user_row = df[(df['Username'] == user) & (df['Password'].astype(str) == str(password))]
         
