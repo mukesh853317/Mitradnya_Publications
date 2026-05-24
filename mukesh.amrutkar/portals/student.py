@@ -62,8 +62,7 @@ def show_student_dashboard():
             if cat_df.empty:
                 st.warning("⏳ Questions for this section will be updated soon! (Stay Tuned)")
                 continue
-            
-            st.write("---")
+                
             grouped = cat_df.groupby('Question_ID')
             
             for q_idx, (q_id, group) in enumerate(grouped):
@@ -118,7 +117,8 @@ def show_student_dashboard():
                         html_table += "</table>"
                         st.markdown(html_table, unsafe_allow_html=True)
                     
-                    st.markdown("---")
+                    # 🔴 FIX 4: बटणाच्या वरचा स्पेस कमी करण्यासाठी HTML ची छोटी रेष वापरली आहे
+                    st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
                     
                     # AI जनरेट सोल्युशन स्ट्रीमिंगसह (Typewriter Effect)
                     if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
