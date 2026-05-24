@@ -16,6 +16,8 @@ def main():
         if role == "Admin":
             st.write("Welcome Admin! Manage your Publication here.")
         elif role == "Student":
+            from portals import student  # हे पोर्टल इम्पोर्ट करा
+            student.show_student_dashboard()  # हे फंक्शन रन करा
             st.write("Welcome Student! Start your learning.")
         elif role == "Parent":
             st.write("Welcome Parent! Monitor your child's progress.")
