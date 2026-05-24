@@ -101,7 +101,7 @@ def show_student_dashboard():
                         with st.spinner("⏳ Generating Solution..."):
                             try:
                                 # gemini-1.5-flash हे सर्वात जलद मॉडेल आहे
-                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                model = genai.GenerativeModel('gemini-3.5-flash')
                                 response = model.generate_content(f"Solve this accountancy problem in detail:\n\n{q_text}")
                                 st.markdown("### 📝 Generated Solution:")
                                 st.markdown(response.text)
