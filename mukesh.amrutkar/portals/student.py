@@ -14,30 +14,26 @@ def show_student_dashboard():
         
         for i, tab in enumerate(tabs):
             with tab:
-                # डेटा फिल्टर करणे
                 cat_df = qna_df[qna_df['Category'].astype(str).str.strip() == categories[i]]
                 
                 if cat_df.empty:
-                    st.write("Will Update Questions Soon!!!")
+                    st.write("Will Update Soon.")
                     continue
                 
+                # प्रश्न टेबल फॉरमॅटमध्ये दाखवणे
+                st.write("### 📝 List of Questions:")
                 for idx, row in cat_df.iterrows():
-                    q_text = str(row['Question_Text'])
-                    
-                    # एक्सपँडरचे नाव (Q. नंबर दिसेल)
-                    with st.expander(f"Q. {idx + 1}: {q_text}..."):
+                    # फक्त प्रश्न दिसतोय
+                    with st.expander(f"Q. {idx + 1}: {str(row['Question_Text'])[:50]}..."):
+                        st.markdown(f"**Full Question:**\n\n{row['Question_Text']}")
                         
-                        # पूर्ण प्रश्न दिसण्यासाठी text_area वापरले आहे
-                        st.text_area("Full Question:", value=q_text, height=150, key=f"q_text_{idx}")
-                        
-                        # उत्तराचा विभाग
-                        with st.expander("📝 Show Ans / Hint"):
-                            st.success(str(row['Answer_or_Hint']))
+                        # आता खाली बटण आहे, जे दाबल्यावरच उत्तर दिसेल
+                        if st.button(f"🔍 Ans / Hint (Q. {idx + 1})", key=f"ans_btn_{idx}"):
+                            st.divider()
+                            st.success(f"** Ans/ Hint :**\n\n{row['Answer_or_Hint']}")
                             
-                            # AI जनरेट बटण
+                            # AI सोल्युशन बटण उत्तराच्या खाली
                             if st.button(f"🧠 Generate Answer", key=f"ai_{idx}"):
-                                with st.spinner("Generating AI Answer..."):
-                                    # इथे तुमचे AI लॉजिक येईल
-                                    st.write("Generating Detailed Answer...") 
+                                st.info("Generating Answer...")
     else:
-        st.error("No Data File found at " + csv_path)
+        st.error("No Data File found!")
