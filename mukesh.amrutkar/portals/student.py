@@ -10,6 +10,6 @@ def show_student_dashboard():
     with tab1:
         st.write("Your Short Notes will appear here.")
     with tab2:
-        st.write("There will be Exercise Practice Problems here.")
+        st.write("Your Exercise Practice Problems will appear here.")
     with tab3:
-        st.write("There will be Extra Practical Questions here.")
+        st.write("Your Extra Practical Questions will appear here.")
