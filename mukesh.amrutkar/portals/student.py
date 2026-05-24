@@ -100,7 +100,7 @@ def show_student_dashboard():
                                     html_table += "<tr>"
                                     for col in t_row:
                                         if r_idx == 0:
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                         else:
                                             html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
@@ -117,7 +117,7 @@ def show_student_dashboard():
                             html_table += "<tr>"
                             for col in t_row:
                                 if r_idx == 0:
-                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
+                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; '>{col}</th>"
                                 else:
                                     html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                             html_table += "</tr>"
