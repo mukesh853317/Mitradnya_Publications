@@ -10,7 +10,7 @@ def main():
         auth.show_login() # ही फाईल आता नीट काम करेल
     else:
         st.title(f"Welcome, {st.session_state.username}!")
-        st.write("Welcome to Mitradnya Publications Portal.")
+        st.write("📚 Welcome to MITRADNYA PUBLICATION'S Portal 📚")
         
         # लॉगआउट बटण
         if st.sidebar.button("Logout"):
