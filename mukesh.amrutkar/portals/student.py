@@ -3,20 +3,17 @@ import pandas as pd
 import os
 
 def show_student_dashboard():
-    st.subheader("🎓 Student Dashboard - Q&A Portal")
+    st.subheader("🎓 Student Dashboard")
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
     
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path)
         
-        # १. डेटा क्लीन करणे
+        # डेटा क्लीनिंग
         df['Chapter_Name'] = df['Chapter_Name'].ffill()
         df['Category'] = df['Category'].ffill()
-        
-        # २. प्रश्न ग्रुप करणे
         df['Question_ID'] = (df['Chapter_Name'].notna() & df['Category'].notna()).cumsum()
         
-        # ३. टॅब्स तयार करणे
         categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
         tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
         
@@ -26,24 +23,27 @@ def show_student_dashboard():
                 grouped = cat_df.groupby('Question_ID')
                 
                 for q_id, group in grouped:
-                    # प्रश्न आणि ट्रायल बॅलन्स टेबल तयार करणे
+                    # १. प्रश्न मजकूर (नंबर न देता)
                     full_q_text = group['Question_Text'].iloc[0]
-                    st.markdown(f"### Q.{q_id}: {full_q_text}")
+                    st.markdown(f"**{full_q_text}**")
                     
-                    # ट्रायल बॅलन्स टेबल फॉरमॅटमध्ये बदलणे
+                    # २. टेबल फॉरमॅट (Trial Balance चे भाग)
                     tb_data = []
                     for _, row in group.iloc[1:].iterrows():
                         text = str(row['Question_Text'])
                         if '|' in text:
-                            parts = text.split('|')
-                            tb_data.append([p.strip() for p in parts])
+                            parts = [p.strip() for p in text.split('|')]
+                            tb_data.append(parts)
                     
                     if tb_data:
-                        tb_df = pd.DataFrame(tb_data)
-                        st.table(tb_df) # टेबल फॉरमॅट
+                        # टेबलचे कॉलम्स ट्रायल बॅलन्सप्रमाणे
+                        tb_df = pd.DataFrame(tb_data, columns=["Particulars", "Debit ₹", "Credit ₹"])
+                        st.table(tb_df)
                     
-                    # उत्तर/हिंट बटण
-                    if st.button(f"🔍 See Ans / Hint for Q.{q_id}", key=f"btn_{q_id}"):
-                        st.success("Detailed solution will be displayed here...")
+                    # ३. उत्तर विभाग (बटण दाबल्यावर)
+                    if st.button(f"🔍 Show Answer / Hint", key=f"btn_{q_id}"):
+                        st.success(f"**Solution:** {group['Answer_or_Hint'].iloc[0]}")
+                        
+                    st.divider() # दोन प्रश्नांमध्ये रेषा
     else:
         st.error("Data File Not Found!")
