@@ -5,7 +5,9 @@ import os
 def parse_table(lines):
     parsed = []
     for line in lines:
+        # '|' ने स्प्लिट करा
         parts = [p.strip() for p in line.split('|')]
+        # रिकामे कॉलम्स काढून टाका
         parts = [p for p in parts if p != '']
         if len(parts) >= 2:
             parsed.append(parts)
@@ -13,13 +15,22 @@ def parse_table(lines):
     if not parsed:
         return None
 
-    max_cols = max(len(r) for r in parsed)
-    parsed = [r + [''] * (max_cols - len(r)) for r in parsed]
-    return pd.DataFrame(parsed[1:], columns=parsed[0])
+    # पहिले रो 'Header' म्हणून घ्या
+    header = parsed[0]
+    data = parsed[1:]
+    
+    # कॉलमची संख्या जुळवून घ्या
+    max_cols = len(header)
+    clean_data = []
+    for row in data:
+        if len(row) < max_cols:
+            row = row + [''] * (max_cols - len(row))
+        clean_data.append(row[:max_cols])
+        
+    return pd.DataFrame(clean_data, columns=header)
 
 def show_student_dashboard():
-    st.subheader("🎓 Student Dashboard - Q&A Portal")
-
+    st.subheader("🎓 Student Dashboard")
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
 
     if not os.path.exists(csv_path):
@@ -28,14 +39,7 @@ def show_student_dashboard():
 
     df = pd.read_csv(csv_path)
     df.columns = df.columns.str.strip()
-
-    df['Chapter_Name'] = df['Chapter_Name'].ffill()
-    df['Category'] = df['Category'].ffill()
-    df['Question_Text'] = df['Question_Text'].fillna('').astype(str).str.strip()
-    df['Answer_or_Hint'] = df['Answer_or_Hint'].fillna('').astype(str).str.strip()
-
-    df['is_main_question'] = df['Chapter_Name'].notna() & df['Category'].notna() & (df['Question_Text'] != '')
-    df['Question_ID'] = df['is_main_question'].cumsum()
+    df = df.ffill() # डेटा क्लीन करा
 
     categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
     tab_names = ["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
@@ -44,53 +48,27 @@ def show_student_dashboard():
     for i, tab in enumerate(tabs):
         with tab:
             cat_df = df[df['Category'].str.strip() == categories[i]]
-
             if cat_df.empty:
                 st.info("No questions available.")
                 continue
 
-            for q_id, group in cat_df.groupby('Question_ID', sort=False):
+            # ग्रुपिंग करून प्रश्न दाखवणे
+            for q_id, group in cat_df.groupby('Question_Text'): # साध्या ग्रुपिंगसाठी
                 group = group.reset_index(drop=True)
-
                 main_q = group.loc[0, 'Question_Text']
-                answer_hint = group.loc[0, 'Answer_or_Hint']
-
+                
                 with st.container(border=True):
-                    st.markdown(f"### {main_q}")
-
-                    body_lines = group.loc[1:, 'Question_Text'].tolist()
-
-                    text_lines = []
-                    table_lines = []
-
-                    for line in body_lines:
-                        line = str(line).strip()
-                        if not line:
-                            continue
-                        if '|' in line:
-                            table_lines.append(line)
-                        else:
-                            text_lines.append(line)
-
-                    for line in text_lines:
-                        low = line.lower()
-
-                        if "trial balance" in low:
-                            st.markdown(f"**{line}**")
-                        elif "adjustment" in low:
-                            st.markdown("**Adjustments:**")
-                        elif line[:2].strip().isdigit() or (len(line) > 1 and line[0].isdigit() and '.' in line[:3]):
-                            st.markdown(f"- {line}")
-                        else:
-                            st.write(line)
-
+                    st.markdown(f"#### {main_q}")
+                    
+                    # डेटा आणि टेबल वेगळे करणे
+                    table_lines = [str(line) for line in group['Question_Text'].tolist() if '|' in str(line)]
+                    
                     if table_lines:
                         table_df = parse_table(table_lines)
                         if table_df is not None:
-                            st.table(table_df)
+                            st.table(table_df) # टेबल फॉरमॅटमध्ये दिसेल
 
-                    if answer_hint:
-                        if st.button("🔍 Show Answer / Hint", key=f"btn_{i}_{q_id}"):
-                            st.success(answer_hint)
-
-                st.write("")
+                    # उत्तर बटण
+                    if not pd.isna(group.loc[0, 'Answer_or_Hint']):
+                        if st.button(f"🔍 Show Solution", key=f"btn_{i}_{q_id}"):
+                            st.success(group.loc[0, 'Answer_or_Hint'])
