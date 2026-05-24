@@ -100,7 +100,7 @@ def show_student_dashboard():
                         with st.spinner("⏳ Generating Solutions..."):
                             try:
                                 # तुम्ही वापरत असलेले मॉडेल
-                                model = genai.GenerativeModel('gemini-3.5-flash') 
+                                model = genai.GenerativeModel('gemini-3.5-pro') 
                                 
                                 # 🔴 मुख्य बदल: request_options={"timeout": 600} 
                                 # यामुळे AI ला गणित सोडवण्यासाठी पुरेसा वेळ मिळेल आणि 504 एरर येणार नाही
