@@ -1,21 +1,12 @@
-import streamlit as st
-from utils import auth
-
-# लॉगिन स्टेट तपासणे
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-
-def main():
-    if not st.session_state.logged_in:
-        auth.show_login() # ही फाईल आता नीट काम करेल
-    else:
-        st.title(f"Welcome, {st.session_state.username}!")
-        st.write("📚 Welcome to MITRADNYA PUBLICATION'S Portal 📚")
-        
-        # लॉगआउट बटण
-        if st.sidebar.button("Logout"):
-            st.session_state.logged_in = False
-            st.rerun()
-
-if __name__ == "__main__":
-    main()
+# main.py मध्ये लॉगिन झाल्यावर हा भाग वापरा:
+if st.session_state.logged_in:
+    role = st.session_state.role
+    
+    if role == "Admin":
+        st.write("Welcome Admin! Manage your Publication here.")
+    elif role == "Student":
+        # इथे आपण portals/student.py ला कॉल करू
+        st.write("Welcome Student! Start your learning.")
+    elif role == "Parent":
+        # इथे आपण portals/parent.py ला कॉल करू
+        st.write("Welcome Parent! Monitor your child's progress.")
