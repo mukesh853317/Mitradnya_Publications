@@ -330,7 +330,7 @@ if df is not None:
                                 # प्रश्न मजकूर इथे तयार केला (q_text)
                                 q_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                                 
-                                with st.expander(f"Question {q_idx + 1}: {group.iloc[0]['Question_Text'][:40]}..."):
+                                with st.expander(f"Q {q_idx + 1}: {group.iloc[0]['Question_Text'][:40]}..."):
                                     # आता q_text इथे आहे, एरर येणार नाही
                                     st.write(q_text)
                                     
