@@ -1,11 +1,6 @@
 import streamlit as st
 from utils import auth
-# सुरक्षित इम्पोर्ट (जर एखादी फाईल सापडली नाही तर ॲप क्रॅश होणार नाही)
-try:
-    from portals import student, admin, parent
-except ModuleNotFoundError as e:
-    st.error(f"Error: Portals File Not Found: {e}")
-    st.stop() 
+from portals import student, admin, parent
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -17,7 +12,6 @@ def main():
         st.sidebar.success(f"Welcome, {st.session_state.username}!")
         role = st.session_state.role
         
-        # आता हे तिन्ही फंक्शन्स ओळखले जातील
         if role == "Admin":
             admin.show_admin_panel()
         elif role == "Student":
