@@ -106,10 +106,7 @@ def show_student_dashboard():
                             st.info(f"💡 **Hint:** {answer_text}")
                             
                         with st.spinner("⏳ Generating Solutions..."):
-                            try:
-                                api_key = st.secrets["GOOGLE_API_KEY"]  # किंवा तुमचे जे नाव असेल ते टाका (उदा. GEMINI_API_KEY)
-                                genai.configure(api_key=api_key)
-                                
+                                                     
                                 # तुम्ही वापरत असलेले मॉडेल
                                 model = genai.GenerativeModel('gemini-3.5-pro') 
                                 
