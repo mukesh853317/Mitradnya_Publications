@@ -24,9 +24,13 @@ def show_student_dashboard():
         with tab2:
             st.write("### Exercise Problems")
             for index, row in df[df['Category'] == 'Exercise_Problems'].iterrows():
-                st.write(f"**Q. {index+1}:** {row['Question_Text']}")
-                st.divider()
-
+                for q_idx, (q_id, group) in enumerate(grouped):
+                                # प्रश्न मजकूर इथे तयार केला (q_text)
+                                q_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
+                                
+                                with st.expander(f"Q {q_idx + 1}: {group.iloc[0]['Question_Text'][:40]}..."):
+                                    # आता q_text इथे आहे, एरर येणार नाही
+                                    st.write(q_text)
         with tab3:
             st.write("### Extra Practical")
             for index, row in df[df['Category'] == 'Extra_Practical'].iterrows():
