@@ -2,43 +2,43 @@ import streamlit as st
 import pandas as pd
 import os
 import google.generativeai as genai
-
-# 🔴 हे नवीन लिंक ॲड करा (utils फोल्डरमधून quiz_manager फाईल आणण्यासाठी)
 import sys
+
+# 🔴 नवीन लिंक ॲड करा (utils फोल्डरमधून quiz_manager फाईल आणण्यासाठी)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 try:
     from utils import quiz_manager
 except ImportError:
     pass # जर utils फोल्डर किंवा फाईल नसेल तर एरर येऊ नये म्हणून
 
-# १. तुमची डिझाईन फाईल इथे इम्पोर्ट करा (तुम्ही बनवलेली design_utils.py फाईल त्याच फोल्डरमध्ये असावी)
+# १. तुमची डिझाईन फाईल इथे इम्पोर्ट करा 
 try:
     import design_utils
 except ImportError:
-    pass # जर फाईल नसेल तर एरर येऊ नये म्हणून
+    pass 
 
 def show_student_dashboard():
-    # २. डिझाईन लागू करा (फंक्शन उपलब्ध असल्यास)
+    # २. डिझाईन लागू करा 
     if 'design_utils' in globals() and hasattr(design_utils, 'apply_premium_design'):
         design_utils.apply_premium_design()
 
     st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
     
-    # 🔴 सर्वात आधी API Key इथे एकदाच सेट करा (लूपच्या बाहेर)
+    # 🔴 API Key एकदाच सेट करा 
     try:
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
     except Exception:
         st.error("⚠️ Streamlit Secrets मध्ये GOOGLE_API_KEY सापडली नाही! कृपया सेटिंग्ज तपासा.")
-        return # जर की नसेल तर ॲप इथेच थांबेल आणि पुढचे एरर देणार नाही
+        return 
 
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
 
     if not os.path.exists(csv_path):
-        st.error("⚠️ QnA.csv File Not Found!")
+        st.error("⚠️ QnA.csv File Not Found in data folder!")
         return
 
-    # १. डेटा लोड आणि ग्रुपिंग
+    # डेटा लोड आणि ग्रुपिंग
     df = pd.read_csv(csv_path)
     
     # ffill च्या आधी प्रश्न वेगळे करणे
@@ -48,12 +48,20 @@ def show_student_dashboard():
     df['Chapter_Name'] = df['Chapter_Name'].ffill()
     df['Category'] = df['Category'].ffill()
 
+    # 🔴 सर्व ६ टॅब्सची नावे इथे सेट केली आहेत
     categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
-    tab_names = ["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical", "🎯 Objective Test"]
+    tab_names = [
+        "📖 Short Notes", 
+        "📝 Exercise Problems", 
+        "📊 Extra Practical", 
+        "📄 Board Papers & Solutions", 
+        "🎯 Objective Test",
+        "📈 My Progress"
+    ]
     
     tabs = st.tabs(tab_names)
 
-    # 🔴 पहिले ३ टॅब जुन्या पद्धतीने लोड करा (For Loop मध्ये)
+    # 🔴 पहिले ३ टॅब जुन्या पद्धतीने लोड करा (QnA साठी)
     for i in range(3):
         with tabs[i]:
             cat_name = categories[i]
@@ -62,7 +70,8 @@ def show_student_dashboard():
             if cat_df.empty:
                 st.warning("⏳ Questions for this section will be updated soon! (Stay Tuned)")
                 continue
-                
+            
+            st.write("---")
             grouped = cat_df.groupby('Question_ID')
             
             for q_idx, (q_id, group) in enumerate(grouped):
@@ -74,7 +83,6 @@ def show_student_dashboard():
                     table_data = []
                     answer_text = ""
                     
-                    # AI ला देण्यासाठी संपूर्ण प्रश्न
                     q_text = "\n".join([str(row.get('Question_Text', '')).strip() for _, row in group.iterrows()])
                     
                     for _, row in group.iterrows():
@@ -93,7 +101,7 @@ def show_student_dashboard():
                                     html_table += "<tr>"
                                     for col in t_row:
                                         if r_idx == 0:
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; '>{col}</th>"
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
                                         else:
                                             html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
@@ -110,17 +118,16 @@ def show_student_dashboard():
                             html_table += "<tr>"
                             for col in t_row:
                                 if r_idx == 0:
-                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; '>{col}</th>"
+                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
                                 else:
                                     html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                             html_table += "</tr>"
                         html_table += "</table>"
                         st.markdown(html_table, unsafe_allow_html=True)
                     
-                    # 🔴 FIX 4: बटणाच्या वरचा स्पेस कमी करण्यासाठी HTML ची छोटी रेष वापरली आहे
-                    st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
+                    st.markdown("---")
                     
-                    # AI जनरेट सोल्युशन स्ट्रीमिंगसह (Typewriter Effect)
+                    # AI जनरेट सोल्युशन
                     if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
                         if answer_text:
                             st.info(f"💡 **Hint:** {answer_text}")
@@ -128,7 +135,6 @@ def show_student_dashboard():
                         with st.spinner("⏳ Generating Solutions..."):
                             try:
                                 model = genai.GenerativeModel('gemini-3.5-flash') 
-                                
                                 response = model.generate_content(
                                     f"Solve this accountancy problem in detail step-by-step:\n\n{q_text}", 
                                     stream=True,
@@ -147,25 +153,48 @@ def show_student_dashboard():
                             except Exception as e:
                                 st.error(f"AI Error: {e}")
 
-    # 🔴 ४था टॅब इथे लोड करा (लूपच्या बाहेर)
+    # 🔴 ४था टॅब: Board Papers & Solutions
     with tabs[3]:
+        st.markdown("<h3 style='color: #1e3a8a;'>📄 Board Question Papers & Detailed Solutions</h3>", unsafe_allow_html=True)
+        st.info("💡 Previous years' Board Question Papers & their Detailed Answers will be available here soon..")
+        
+        # डिझाईनसाठी एक डमी ड्रॉपडाऊन
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.selectbox("🗓️ Select Exam Year / Exam Paper:", ["March 2024", "July 2023", "March 2023", "March 2022"])
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.button("📥 Download PDF", disabled=True) # सध्या हे डिसेबल ठेवले आहे
         st.write("---")
-        # इथे आपण सर्व चॅप्टर्सचे नाव दाखवण्यासाठी ड्रॉपडाऊन (Selectbox) दिला आहे
-        # किंवा तुम्ही डायरेक्ट "Chapter 1" असेही देऊ शकता
+
+    # 🔴 ५वा टॅब: Objective Test
+    with tabs[4]:
+        st.markdown("<h3 style='color: #1e3a8a;'>🎯 Objective MCQ Tests</h3>", unsafe_allow_html=True)
         if 'quiz_manager' in globals() and hasattr(quiz_manager, 'load_objective_test'):
-            # तुमच्या Objectives.csv मधील 'No' कॉलममधील युनिक चॅप्टर्सची नावे मिळवण्यासाठी:
             obj_csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
             if os.path.exists(obj_csv_path):
                 obj_df = pd.read_csv(obj_csv_path)
-                # 'No' कॉलममध्ये जे चॅप्टर्सचे नाव आहेत, ते ड्रॉपडाऊनमध्ये दाखवा
                 chapter_list = obj_df['No'].astype(str).unique().tolist()
                 
-                selected_chap = st.selectbox("📝 Select Chapter for Test:", chapter_list)
+                selected_chap = st.selectbox("📝 Select Chapter for MCQ Test:", chapter_list)
                 st.write("---")
                 
-                # निवडलेल्या चॅप्टरनुसार टेस्ट लोड करा
                 quiz_manager.load_objective_test(selected_chap)
             else:
-                st.warning("⚠️ Objectives.csv File Not Found in data folder!")
+                st.warning("⚠️ Objectives.csv File Not Found in data folder! Upload it.")
         else:
              st.error("⚠️ quiz_manager.py file not found in utils folder.")
+
+    # 🔴 ६वा टॅब: My Progress
+    with tabs[5]:
+        st.markdown("<h3 style='color: #1e3a8a;'>📈 Your Performance Analytics</h3>", unsafe_allow_html=True)
+        st.success("🎯 The Results & Progress Graph of the Objective Tests you have solved will be displayed here.")
+        
+        # प्रोग्रेस रिपोर्टसाठी डमी लेआउट (भविष्यातील अपडेटसाठी)
+        col1, col2, col3 = st.columns(3)
+        col1.metric(label="Total Tests Attempted", value="0")
+        col2.metric(label="Average Score", value="0%")
+        col3.metric(label="Current Rank", value="-")
+        
+        st.write("---")
+        st.info("⏳ वProgress graphs (Charts) will be displayed here after the students' data is collected.")
