@@ -3,6 +3,11 @@ import pandas as pd
 import os
 import google.generativeai as genai
 
+# 🔴 हे नवीन लिंक ॲड करा (utils फोल्डरमधून quiz_manager फाईल आणण्यासाठी)
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils import quiz_manager
+
 # १. तुमची डिझाईन फाईल इथे इम्पोर्ट करा (तुम्ही बनवलेली design_utils.py फाईल त्याच फोल्डरमध्ये असावी)
 try:
     import design_utils
