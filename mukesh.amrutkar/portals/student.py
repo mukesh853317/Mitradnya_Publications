@@ -10,11 +10,11 @@ def show_student_dashboard():
         # १. डेटा वाचणे
         df = pd.read_csv(csv_path)
         
-        # २. डेटा क्लीनिंग: रिकाम्या ओळी भरून काढणे (Forward Fill)
+        # २. डेटा क्लीनिंग
         df['Chapter_Name'] = df['Chapter_Name'].ffill()
         df['Category'] = df['Category'].ffill()
         
-        # ३. नवीन प्रश्न ओळखण्यासाठी ग्रुपिंग (जिथे Chapter_Name बदलतो, तो नवीन प्रश्न)
+        # ३. नवीन प्रश्न ओळखण्यासाठी ग्रुपिंग
         df['Question_ID'] = (df['Chapter_Name'].notna() & df['Category'].notna()).cumsum()
         
         # ४. टॅब्स तयार करणे
@@ -23,30 +23,33 @@ def show_student_dashboard():
         
         for i, tab in enumerate(tabs):
             with tab:
-                # संबंधित कॅटेगरी फिल्टर करणे
+                # कॅटेगरी फिल्टर करणे
                 cat_df = df[df['Category'].str.strip() == categories[i]]
                 
-                # ग्रुपिंग करून प्रश्न तयार करणे
+                if cat_df.empty:
+                    st.write("Questions will update soon!!!")
+                    continue
+                
+                # प्रश्न ग्रुपिंग
                 grouped = cat_df.groupby('Question_ID')
                 
-                # टेबल फॉरमॅटमध्ये दाखवण्यासाठी डेटा तयार करणे
-                display_data = []
+                # टेबल दाखवण्यासाठी आणि बटण की (Key) मॅनेज करण्यासाठी लूप
+                q_list = []
                 for q_id, group in grouped:
                     full_text = " ".join(group['Question_Text'].astype(str).tolist())
-                    display_data.append({"Q. No.": q_id, "Question Text": full_text[:100] + "...", "Full_Text": full_text})
+                    q_list.append({"ID": q_id, "Text": full_text})
                 
                 # टेबल दाखवणे
-                if display_data:
-                    q_table = pd.DataFrame(display_data)
-                    st.table(q_table[["Q. No.", "Question Text"]])
-                    
-                    # खाली सविस्तर प्रश्न आणि उत्तर पाहण्याची सोय
-                    for item in display_data:
-                        with st.expander(f"Q. {item['Q. No.']} See Full"):
-                            st.write(item['Full_Text'])
-                            if st.button(f"🔍 See Ans / Hint "):
-                                st.success("Answers Will Update Here...")
-                else:
-                    st.write("Questions Will Update Soon!!!")
+                table_df = pd.DataFrame([{"Q. No.": item["ID"], "Question Text": item["Text"][:100] + "..."} for item in q_list])
+                st.table(table_df)
+                
+                # खाली सविस्तर प्रश्न आणि उत्तर पाहण्याची सोय (युनिक की सह)
+                for item in q_list:
+                    with st.expander(f"Q. {item['ID']} See Full"):
+                        st.write(item['Text'])
+                        
+                        # इथे युनिक 'key' दिली आहे जेणेकरून एरर येणार नाही
+                        if st.button(f"🔍 See Ans / Hint for Q.{item['ID']}", key=f"ans_{categories[i]}_{item['ID']}"):
+                            st.success("Answers Will Update Here...")
     else:
         st.error("QnA.csv File Not Found!!!")
