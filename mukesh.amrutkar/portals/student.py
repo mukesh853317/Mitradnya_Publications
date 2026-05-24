@@ -93,27 +93,19 @@ def show_student_dashboard():
                     
                     # 🎯 तुम्ही दिलेला AI जनरेट सोल्युशनचा कोड
                     if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}"):
-                        with st.spinner("⏳ Generating Solution..."):
+                        
+                        # जर आधीपासून छोटी हिंट असेल तर ती पण दाखवा
+                        if answer_text:
+                            st.info(f"💡 **Hint:** {answer_text}")
+                            
+                        with st.spinner("⏳ Analyzing and Solving with AI..."):
                             try:
-                                # Tumcha model tasach theva kiva 'gemini-1.5-flash' try kara
-                                model = genai.GenerativeModel('gemini-3.5-flash') 
-                                
-                                # stream=True add kela ahe, yamule answer lagach disel
-                                response = model.generate_content(f"Solve this accountancy problem in detail:\n\n{q_text}", stream=True)
-            
+                                # gemini-1.5-flash हे सर्वात जलद मॉडेल आहे
+                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                response = model.generate_content(f"Solve this accountancy problem in detail:\n\n{q_text}")
                                 st.markdown("### 📝 AI Generated Solution:")
-            
-                                # Text type vhayla survat honyasathi placeholder
-                                res_box = st.empty()
-                                full_text = ""
-            
-                                # Loop madhye answer thode thode add hoil (Streaming Effect)    
-                                for chunk in response:
-                                    full_text += chunk.text
-                                    res_box.markdown(full_text + " ▌") # ▌ ha cursor sarkha disel
-            
-                                # Purna generate jhalyavar cursor kadhun takaycha
-                                res_box.markdown(full_text)
-            
+                                st.markdown(response.text)
+                            except Exception as e:
+                                st.error(f"AI Error: {e}")
                         except Exception as e:
                             st.error(f"AI Error: {e}")
