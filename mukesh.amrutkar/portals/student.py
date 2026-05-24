@@ -3,37 +3,34 @@ import pandas as pd
 import os
 
 def show_student_dashboard():
-    st.subheader("🎓 Student Dashboard - Q&A Portal 🎓")
-    
+    st.subheader("🎓 Student Dashboard")
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
     
     if os.path.exists(csv_path):
         qna_df = pd.read_csv(csv_path)
         
-        # तुमच्या हेडर्समधील स्पेलिंग जुळवून घेणे
+        # 'Category' फिल्टर करणे
         categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
-        tab1, tab2, tab3 = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
-        tabs = [tab1, tab2, tab3]
+        tabs = st.tabs(["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"])
         
         for i, tab in enumerate(tabs):
             with tab:
-                cat_name = categories[i]
-                # 'Category' कॉलम फिल्टर करणे
-                cat_df = qna_df[qna_df['Category'].astype(str).str.strip() == cat_name]
+                cat_df = qna_df[qna_df['Category'].astype(str).str.strip() == categories[i]]
                 
-                if not cat_df.empty:
-                    # आता आपण इंडेक्स वापरून लूप फिरवूया (ID ची गरज नाही)
-                    for idx, row in cat_df.iterrows():
-                        q_text = str(row['Question_Text'])
+                for idx, row in cat_df.iterrows():
+                    # पूर्ण प्रश्न दाखवण्यासाठी :40 काढले आहे
+                    q_text = str(row['Question_Text'])
+                    
+                    with st.expander(f"Q. {q_text[:60]}..."): # हेडरमध्ये फक्त थोडी हिंट दिसेल
+                        st.write("### Full Question")
+                        st.info(q_text) # पूर्ण प्रश्न इथे वाचता येईल
                         
-                        # एक्सपँडरमध्ये प्रश्न दाखवणे
-                        with st.expander(f"Q. {idx + 1}: {q_text[:40]}..."):
-                            st.write(q_text)
+                        # डिटेल उत्तरासाठी स्वतंत्र विभाग
+                        with st.expander("📝 Show Ans / Hint "):
+                            st.success(f"{row['Answer_or_Hint']}")
                             
-                            # हिंट किंवा उत्तर दाखवणे
-                            if st.button(f"💡 See Hint/Answer", key=f"btn_{idx}"):
-                                st.success(f"Ans / Hint: {row['Answer_or_Hint']}")
-                else:
-                    st.write("Will Update Soon!!!")
+                            # AI सोल्युशनसाठी बटण
+                            if st.button(f"🧠 Generate Answer", key=f"ai_{idx}"):
+                                st.write("Generating Answer...")
     else:
-        st.error("QnA.csv Not Found!!!")
+        st.error("No Data File!")
