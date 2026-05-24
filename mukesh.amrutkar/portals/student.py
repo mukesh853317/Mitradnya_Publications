@@ -96,11 +96,19 @@ def show_student_dashboard():
                         html_table += "</table>"
                         st.markdown(html_table, unsafe_allow_html=True)
                     
-                    # 🎯 नेहमी दिसणारे Generate Solution बटन
-                    st.markdown("---")
-                    if st.button(f"🧠 Generate Solution", key=f"btn_gen_{categories[i]}_{q_idx}"):
+                    # 🎯 तुम्ही दिलेला AI जनरेट सोल्युशनचा कोड
+                    if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}"):
+                        
+                        # जर आधीपासून छोटी हिंट असेल तर ती पण दाखवा
                         if answer_text:
-                            st.success("✅ Solution Generated Successfully!")
-                            st.markdown(f"**Answer / Hint:** \n{answer_text}")
-                        else:
-                            st.info("💡 Detailed solution for this question will be updated soon!")
+                            st.info(f"💡 **Hint:** {answer_text}")
+                            
+                        with st.spinner("⏳ Generating Answer..."):
+                            try:
+                                # gemini-1.5-flash हे सर्वात जलद मॉडेल आहे
+                                model = genai.GenerativeModel('gemini-3.5-flash')
+                                response = model.generate_content(f"Solve this accountancy problem in detail:\n\n{q_text}")
+                                st.markdown("### 📝 Generated Solution:")
+                                st.markdown(response.text)
+                            except Exception as e:
+                                st.error(f"AI Error: {e}")
