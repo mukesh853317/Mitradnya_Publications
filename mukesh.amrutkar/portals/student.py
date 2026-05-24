@@ -4,7 +4,15 @@ import os
 import google.generativeai as genai
 
 def show_student_dashboard():
-    st.subheader("🎓 Student Dashboard - Mitradnya Publication")
+    st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
+    
+    # 🔴 सर्वात आधी API Key इथे एकदाच सेट करा (लूपच्या बाहेर)
+    try:
+        api_key = st.secrets["GOOGLE_API_KEY"]
+        genai.configure(api_key=api_key)
+    except Exception:
+        st.error("⚠️ Streamlit Secrets मध्ये GOOGLE_API_KEY सापडली नाही! कृपया सेटिंग्ज तपासा.")
+        return # जर की नसेल तर ॲप इथेच थांबेल आणि पुढचे एरर देणार नाही
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
 
     if not os.path.exists(csv_path):
