@@ -3,7 +3,17 @@ import pandas as pd
 import os
 import google.generativeai as genai
 
+# १. तुमची डिझाईन फाईल इथे इम्पोर्ट करा (तुम्ही बनवलेली design_utils.py फाईल त्याच फोल्डरमध्ये असावी)
+try:
+    import design_utils
+except ImportError:
+    pass # जर फाईल नसेल तर एरर येऊ नये म्हणून
+
 def show_student_dashboard():
+    # २. डिझाईन लागू करा (फंक्शन उपलब्ध असल्यास)
+    if 'design_utils' in globals() and hasattr(design_utils, 'apply_premium_design'):
+        design_utils.apply_premium_design()
+
     st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
     
     # 🔴 सर्वात आधी API Key इथे एकदाच सेट करा (लूपच्या बाहेर)
@@ -13,6 +23,7 @@ def show_student_dashboard():
     except Exception:
         st.error("⚠️ Streamlit Secrets मध्ये GOOGLE_API_KEY सापडली नाही! कृपया सेटिंग्ज तपासा.")
         return # जर की नसेल तर ॲप इथेच थांबेल आणि पुढचे एरर देणार नाही
+
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
 
     if not os.path.exists(csv_path):
@@ -74,7 +85,7 @@ def show_student_dashboard():
                                     html_table += "<tr>"
                                     for col in t_row:
                                         if r_idx == 0:
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
                                         else:
                                             html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
@@ -91,7 +102,7 @@ def show_student_dashboard():
                             html_table += "<tr>"
                             for col in t_row:
                                 if r_idx == 0:
-                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
+                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
                                 else:
                                     html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                             html_table += "</tr>"
@@ -101,14 +112,16 @@ def show_student_dashboard():
                     st.markdown("---")
                     
                     # AI जनरेट सोल्युशन स्ट्रीमिंगसह (Typewriter Effect)
-                    if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}"):
+                    # type="primary" मुळे बटण उठून दिसेल
+                    if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
                         if answer_text:
                             st.info(f"💡 **Hint:** {answer_text}")
                             
                         with st.spinner("⏳ Generating Solutions..."):
-                                                     
-                                # तुम्ही वापरत असलेले मॉडेल
-                                model = genai.GenerativeModel('gemini-3.5-pro') 
+                            try:
+                                # तुम्ही वापरत असलेले मॉडेल (gemini-3.5-flash हे फास्ट आहे)
+                                # जर हे मॉडेल एरर देत असेल तर 'gemini-1.5-flash' वापरून पहा
+                                model = genai.GenerativeModel('gemini-3.5-flash') 
                                 
                                 # 🔴 मुख्य बदल: request_options={"timeout": 600} 
                                 # यामुळे AI ला गणित सोडवण्यासाठी पुरेसा वेळ मिळेल आणि 504 एरर येणार नाही
@@ -117,7 +130,7 @@ def show_student_dashboard():
                                     stream=True,
                                     request_options={"timeout": 600}
                                 )
-                                                                
+                                                                                     
                                 st.markdown("### 📝 Generated Solution:")
                                 res_box = st.empty()
                                 full_text = ""
