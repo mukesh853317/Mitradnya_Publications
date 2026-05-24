@@ -71,7 +71,6 @@ def show_student_dashboard():
                 st.warning("⏳ Questions for this section will be updated soon! (Stay Tuned)")
                 continue
             
-            st.write("---")
             grouped = cat_df.groupby('Question_ID')
             
             for q_idx, (q_id, group) in enumerate(grouped):
@@ -125,9 +124,7 @@ def show_student_dashboard():
                         html_table += "</table>"
                         st.markdown(html_table, unsafe_allow_html=True)
                     
-                    st.markdown("---")
-                    
-                    # AI जनरेट सोल्युशन
+                   # AI जनरेट सोल्युशन
                     if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
                         if answer_text:
                             st.info(f"💡 **Hint:** {answer_text}")
@@ -165,8 +162,7 @@ def show_student_dashboard():
         with col2:
             st.markdown("<br>", unsafe_allow_html=True)
             st.button("📥 Download PDF", disabled=True) # सध्या हे डिसेबल ठेवले आहे
-        st.write("---")
-
+        
     # 🔴 ५वा टॅब: Objective Test
     with tabs[4]:
         st.markdown("<h3 style='color: #1e3a8a;'>🎯 Objective MCQ Tests</h3>", unsafe_allow_html=True)
@@ -177,8 +173,7 @@ def show_student_dashboard():
                 chapter_list = obj_df['No'].astype(str).unique().tolist()
                 
                 selected_chap = st.selectbox("📝 Select Chapter for MCQ Test:", chapter_list)
-                st.write("---")
-                
+                              
                 quiz_manager.load_objective_test(selected_chap)
             else:
                 st.warning("⚠️ Objectives.csv File Not Found in data folder! Upload it.")
@@ -197,4 +192,4 @@ def show_student_dashboard():
         col3.metric(label="Current Rank", value="-")
         
         st.write("---")
-        st.info("⏳ वProgress graphs (Charts) will be displayed here after the students' data is collected.")
+        st.info("⏳ Progress Graphs (Charts) will be displayed here after the students' data is collected.")
