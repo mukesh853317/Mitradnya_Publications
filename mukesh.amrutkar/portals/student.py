@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 def show_student_dashboard():
-    st.subheader("🎓 Student Dashboard - Q&A Portal")
+    st.subheader("🎓 Student Dashboard - Q&A Portal 🎓")
     
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
     
@@ -27,13 +27,13 @@ def show_student_dashboard():
                         q_text = str(row['Question_Text'])
                         
                         # एक्सपँडरमध्ये प्रश्न दाखवणे
-                        with st.expander(f"प्रश्न {idx + 1}: {q_text[:40]}..."):
+                        with st.expander(f"Q. {idx + 1}: {q_text[:40]}..."):
                             st.write(q_text)
                             
                             # हिंट किंवा उत्तर दाखवणे
-                            if st.button(f"💡 पहा Hint/Answer", key=f"btn_{idx}"):
-                                st.success(f"उत्तर/हिंट: {row['Answer_or_Hint']}")
+                            if st.button(f"💡 See Hint/Answer", key=f"btn_{idx}"):
+                                st.success(f"Ans / Hint: {row['Answer_or_Hint']}")
                 else:
-                    st.write("या विभागात कोणतेही प्रश्न उपलब्ध नाहीत.")
+                    st.write("Will Update Soon!!!")
     else:
-        st.error("QnA.csv फाईल सापडली नाही!")
+        st.error("QnA.csv Not Found!!!")
