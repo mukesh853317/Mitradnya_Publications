@@ -2,13 +2,9 @@ import streamlit as st
 import pandas as pd
 import os
 import google.generativeai as genai
-import design_utils
 
 def show_student_dashboard():
-    design_utils.apply_premium_design()
     st.subheader("🎓 Student Dashboard - Mitradnya Publication")
-    st.markdown("<div class='main-title'>🎓 Student Dashboard</div>", unsafe_allow_html=True)
-    st.markdown("<div class='sub-title'>📚 Mitradnya Publications - Q&A Learning Portal</div>", unsafe_allow_html=True)
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
 
     if not os.path.exists(csv_path):
