@@ -1,7 +1,7 @@
 import streamlit as st
 
 def show_login():
-    st.subheader("🔐 Mitradnya Portal - Login")
+    st.subheader("🔐 Mitradnya's Portal - Login")
     user = st.text_input("Username")
     password = st.text_input("Password", type="password")
     
