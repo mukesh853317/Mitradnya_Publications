@@ -2,6 +2,21 @@ import streamlit as st
 import pandas as pd
 import os
 
+def parse_table(lines):
+    parsed = []
+    for line in lines:
+        parts = [p.strip() for p in line.split('|')]
+        parts = [p for p in parts if p != '']
+        if len(parts) >= 2:
+            parsed.append(parts)
+
+    if not parsed:
+        return None
+
+    max_cols = max(len(r) for r in parsed)
+    parsed = [r + [''] * (max_cols - len(r)) for r in parsed]
+    return pd.DataFrame(parsed[1:], columns=parsed[0])
+
 def show_student_dashboard():
     st.subheader("🎓 Student Dashboard - Q&A Portal")
 
@@ -14,20 +29,12 @@ def show_student_dashboard():
     df = pd.read_csv(csv_path)
     df.columns = df.columns.str.strip()
 
-    # रिकामे values fill
     df['Chapter_Name'] = df['Chapter_Name'].ffill()
     df['Category'] = df['Category'].ffill()
     df['Question_Text'] = df['Question_Text'].fillna('').astype(str).str.strip()
     df['Answer_or_Hint'] = df['Answer_or_Hint'].fillna('').astype(str).str.strip()
 
-    # नवीन question detect करणे:
-    # ज्या row ला Chapter_Name + Category आहे आणि Question_Text आहे ती main row
-    df['is_main_question'] = (
-        df['Chapter_Name'].notna() &
-        df['Category'].notna() &
-        (df['Question_Text'] != '')
-    )
-
+    df['is_main_question'] = df['Chapter_Name'].notna() & df['Category'].notna() & (df['Question_Text'] != '')
     df['Question_ID'] = df['is_main_question'].cumsum()
 
     categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
@@ -42,70 +49,48 @@ def show_student_dashboard():
                 st.info("No questions available.")
                 continue
 
-            grouped = cat_df.groupby('Question_ID', sort=False)
-
-            for q_id, group in grouped:
+            for q_id, group in cat_df.groupby('Question_ID', sort=False):
                 group = group.reset_index(drop=True)
 
-                # main question
-                main_question = group.iloc[0]['Question_Text']
-                answer_hint = group.iloc[0]['Answer_or_Hint']
+                main_q = group.loc[0, 'Question_Text']
+                answer_hint = group.loc[0, 'Answer_or_Hint']
 
-                st.markdown(f"### {main_question}")
+                with st.container(border=True):
+                    st.markdown(f"### {main_q}")
 
-                normal_lines = []
-                table_data = []
-                table_headers = None
+                    body_lines = group.loc[1:, 'Question_Text'].tolist()
 
-                for idx in range(1, len(group)):
-                    text = str(group.loc[idx, 'Question_Text']).strip()
+                    text_lines = []
+                    table_lines = []
 
-                    if not text:
-                        continue
+                    for line in body_lines:
+                        line = str(line).strip()
+                        if not line:
+                            continue
+                        if '|' in line:
+                            table_lines.append(line)
+                        else:
+                            text_lines.append(line)
 
-                    if '|' in text:
-                        parts = [p.strip() for p in text.split('|')]
+                    for line in text_lines:
+                        low = line.lower()
 
-                        # रिकामे trailing columns remove
-                        while parts and parts[-1] == '':
-                            parts.pop()
+                        if "trial balance" in low:
+                            st.markdown(f"**{line}**")
+                        elif "adjustment" in low:
+                            st.markdown("**Adjustments:**")
+                        elif line[:2].strip().isdigit() or (len(line) > 1 and line[0].isdigit() and '.' in line[:3]):
+                            st.markdown(f"- {line}")
+                        else:
+                            st.write(line)
 
-                        if len(parts) >= 2:
-                            if table_headers is None:
-                                table_headers = parts
-                            else:
-                                table_data.append(parts)
-                    else:
-                        normal_lines.append(text)
+                    if table_lines:
+                        table_df = parse_table(table_lines)
+                        if table_df is not None:
+                            st.table(table_df)
 
-                # Text भाग proper format मध्ये
-                for line in normal_lines:
-                    low = line.lower()
+                    if answer_hint:
+                        if st.button("🔍 Show Answer / Hint", key=f"btn_{i}_{q_id}"):
+                            st.success(answer_hint)
 
-                    if "trial balance" in low:
-                        st.markdown(f"**{line}**")
-
-                    elif "adjustment" in low:
-                        st.markdown("**Adjustments:**")
-
-                    elif line[:2].isdigit() or (
-                        len(line) > 1 and line[0].isdigit() and line[1] == '.'
-                    ):
-                        st.markdown(f"- {line}")
-
-                    else:
-                        st.write(line)
-
-                # Table render
-                if table_headers and table_data:
-                    valid_rows = [row for row in table_data if len(row) == len(table_headers)]
-                    if valid_rows:
-                        tb_df = pd.DataFrame(valid_rows, columns=table_headers)
-                        st.table(tb_df)
-
-                # Answer / Hint
-                if answer_hint:
-                    if st.button("🔍 Show Answer / Hint", key=f"btn_{i}_{q_id}"):
-                        st.success(answer_hint)
-
-                st.divider()
+                st.write("")
