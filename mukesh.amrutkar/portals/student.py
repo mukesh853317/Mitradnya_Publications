@@ -56,7 +56,7 @@ def show_student_dashboard():
                         line = str(row.get('Question_Text', '')).strip()
                         ans = str(row.get('Answer_or_Hint', '')).strip()
                         
-                        if ans and ans != "nan" and ans != "माहिती उपलब्ध नाही":
+                        if ans and ans != "nan" and ans != "Info. Not Available":
                             answer_text = ans
                         
                         # जर ओळीत '|' असेल, तर ते टेबलमध्ये टाका
@@ -70,7 +70,7 @@ def show_student_dashboard():
                                     html_table += "<tr>"
                                     for col in t_row:
                                         if r_idx == 0: # हेडर
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                         else: # डेटा
                                             html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
@@ -89,7 +89,7 @@ def show_student_dashboard():
                             html_table += "<tr>"
                             for col in t_row:
                                 if r_idx == 0:
-                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
+                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                 else:
                                     html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                             html_table += "</tr>"
