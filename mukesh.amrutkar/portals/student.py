@@ -4,7 +4,7 @@ import os
 import google.generativeai as genai # AI साठी हे import आवश्यक आहे
 
 def show_student_dashboard():
-    st.subheader("🎓 Student Dashboard - Q&A Portal")
+    st.subheader("🎓 Mitradnya's Student Dashboard - Q&A Portal 🎓")
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
 
     if not os.path.exists(csv_path):
@@ -42,7 +42,7 @@ def show_student_dashboard():
                 main_title = str(first_row.get('Question_Text', ''))
                 display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
                 
-                with st.expander(f"🔹 Question {q_idx + 1}: {display_title}"):
+                with st.expander(f" Q. {q_idx + 1}: {display_title}"):
                     table_data = []
                     answer_text = ""
                     
@@ -53,7 +53,7 @@ def show_student_dashboard():
                         line = str(row.get('Question_Text', '')).strip()
                         ans = str(row.get('Answer_or_Hint', '')).strip()
                         
-                        if ans and ans != "nan" and ans != "माहिती उपलब्ध नाही":
+                        if ans and ans != "nan" and ans != "No Information":
                             answer_text = ans
                         
                         if '|' in line:
@@ -65,7 +65,7 @@ def show_student_dashboard():
                                     html_table += "<tr>"
                                     for col in t_row:
                                         if r_idx == 0:
-                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
+                                            html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                         else:
                                             html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                     html_table += "</tr>"
@@ -82,7 +82,7 @@ def show_student_dashboard():
                             html_table += "<tr>"
                             for col in t_row:
                                 if r_idx == 0:
-                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: center;'>{col}</th>"
+                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                 else:
                                     html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                             html_table += "</tr>"
@@ -98,12 +98,12 @@ def show_student_dashboard():
                         if answer_text:
                             st.info(f"💡 **Hint:** {answer_text}")
                             
-                        with st.spinner("⏳ Analyzing and Solving with AI..."):
+                        with st.spinner("⏳ Generating Solution..."):
                             try:
                                 # gemini-1.5-flash हे सर्वात जलद मॉडेल आहे
                                 model = genai.GenerativeModel('gemini-1.5-flash')
                                 response = model.generate_content(f"Solve this accountancy problem in detail:\n\n{q_text}")
-                                st.markdown("### 📝 AI Generated Solution:")
+                                st.markdown("### 📝 Generated Solution:")
                                 st.markdown(response.text)
                             except Exception as e:
                                 st.error(f"AI Error: {e}")
