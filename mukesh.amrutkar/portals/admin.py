@@ -15,30 +15,28 @@ def create_pdf(text_data):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Courier", size=9)
-    # ऑटो पेज ब्रेक आणि मार्जिन सेट करणे 
     pdf.set_auto_page_break(auto=True, margin=15)
     
     clean_text = text_data.encode('latin-1', 'replace').decode('latin-1')
     
     for line in clean_text.split('\n'):
-        # 🔴 रामबाण उपाय: कोणतीही लांबलचक रेष 80 कॅरेक्टर्स पेक्षा मोठी असल्यास तिला कट करणे
         wrapped_lines = textwrap.wrap(line, width=80, break_long_words=True, replace_whitespace=False)
         
         if not wrapped_lines:
-            pdf.ln(5) # रिकामी ओळ
+            pdf.ln(5)
             continue
             
         for w_line in wrapped_lines:
             try:
                 pdf.multi_cell(0, 5, txt=w_line)
             except Exception:
-                pass # अत्यंत सेफ फॉलबॅक
+                pass
                 
-    try:
-        pdf_bytes = pdf.output(dest="S").encode('latin-1')
-    except TypeError:
-        pdf_bytes = bytes(pdf.output())
-    return pdf_bytes
+    out = pdf.output()
+    # 🔴 ही ओळ जुन्या आणि नव्या दोन्ही लायब्ररीला सपोर्ट करेल आणि क्रॅश होणार नाही
+    if isinstance(out, str):
+        return out.encode('latin-1')
+    return bytes(out)
 
 def show_admin_panel():
     st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - Paper Generator</h2>", unsafe_allow_html=True)
@@ -99,7 +97,6 @@ def show_admin_panel():
                     in_table = True
                 html += "<tr>"
                 cols = line.split('|')
-                # Text for PDF: Pad spaces so it looks like a table
                 text += " | ".join([c.strip().ljust(15)[:15] for c in cols]) + "\n"
                 for cell in cols:
                     if "Total" in line or "Balance" in line:
