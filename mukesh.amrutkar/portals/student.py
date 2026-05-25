@@ -1,7 +1,88 @@
+import streamlit as st
+import pandas as pd
+import os
+import google.generativeai as genai
+import sys
+
+# नवीन लिंक ॲड करा (utils फोल्डरमधून quiz_manager फाईल आणण्यासाठी)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+try:
+    from utils import quiz_manager
+except ImportError:
+    pass 
+
+# १. तुमची डिझाईन फाईल इथे इम्पोर्ट करा 
+try:
+    import design_utils
+except ImportError:
+    pass 
+
+def show_student_dashboard():
+    # २. डिझाईन लागू करा 
+    if 'design_utils' in globals() and hasattr(design_utils, 'apply_premium_design'):
+        design_utils.apply_premium_design()
+
+    st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
+    
+    # API Key एकदाच सेट करा 
+    try:
+        api_key = st.secrets["GOOGLE_API_KEY"]
+        genai.configure(api_key=api_key)
+    except Exception:
+        st.error("⚠️ Streamlit Secrets: GOOGLE_API_KEY is missing! Please check settings.")
+        return 
+
+    csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
+
+    if not os.path.exists(csv_path):
+        st.error("⚠️ QnA.csv File Not Found in data folder!")
+        return
+
+    # डेटा लोड 
+    df = pd.read_csv(csv_path)
+    
+    # ffill च्या आधी प्रश्न वेगळे करणे
+    df['is_main_question'] = df['Chapter_Name'].notna() & (df['Chapter_Name'].astype(str).str.strip() != '')
+    df['Question_ID'] = df['is_main_question'].cumsum()
+
+    # जर CSV मध्ये Subject कॉलम नसेल, तर तात्पुरता 'BK' म्हणून सेट करू
+    if 'Subject' not in df.columns:
+        df['Subject'] = 'BK'
+
+    df['Subject'] = df['Subject'].ffill()
+    df['Chapter_Name'] = df['Chapter_Name'].ffill()
+    df['Category'] = df['Category'].ffill()
+
+    # ==============================================================
+    # २ स्तरांचे ग्लोबल फिल्टर (Subject -> Chapter)
+    # ==============================================================
+    st.markdown("<h4 style='color: #4b5563; margin-bottom: 5px;'>📚 Select Subject & Chapter:</h4>", unsafe_allow_html=True)
+    
+    col_sub, col_chap = st.columns(2)
+    
+    with col_sub:
+        subject_list = df['Subject'].dropna().astype(str).unique().tolist()
+        selected_subject = st.selectbox("Select Subject", subject_list, key="global_subject_select")
+        
+    df_subject = df[df['Subject'].astype(str).str.strip() == str(selected_subject).strip()]
+    
+    with col_chap:
+        chapter_list = df_subject['Chapter_Name'].dropna().astype(str).unique().tolist()
+        selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
+        
+    df_filtered = df_subject[df_subject['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip()]
+
+    # मुख्य ४ टॅब्स 
+    main_tab_names = [
+        "📚 Study Room", 
+        "📄 Board Papers & Solutions", 
+        "🎯 Objective Test",
+        "📈 My Progress"
+    ]
     main_tabs = st.tabs(main_tab_names)
 
     # ==========================================
-    # 🔴 १. Study Room (यात पहिले ३ टॅब्स येतील)
+    # १. Study Room (यात पहिले ३ टॅब्स येतील)
     # ==========================================
     with main_tabs[0]:
         categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
@@ -99,7 +180,7 @@
                                     st.error(f"AI Error: {e}")
 
     # ==========================================
-    # 🔴 २. Board Papers & Solutions
+    # २. Board Papers & Solutions
     # ==========================================
     with main_tabs[1]:
         st.markdown(f"<h3 style='color: #1e3a8a;'>📄 Board Question Papers ({selected_subject})</h3>", unsafe_allow_html=True)
@@ -113,16 +194,16 @@
             st.button("📥 Download PDF", disabled=True) 
 
     # ==========================================
-    # 🔴 ३. Objective Test (सब्जेक्ट आणि चॅप्टर दोन्ही पास केले)
+    # ३. Objective Test 
     # ==========================================
     with main_tabs[2]:
         if 'quiz_manager' in globals() and hasattr(quiz_manager, 'load_objective_test'):
             quiz_manager.load_objective_test(selected_subject, selected_chapter)
         else:
-             st.error("⚠️ quiz_manager.py file not found in utils folder.")
+            st.error("⚠️ quiz_manager.py file not found in utils folder.") # 🔴 FIXED INDENTATION HERE
 
     # ==========================================
-    # 🔴 ४. My Progress (आता इथे रिअल डेटा लोड होईल)
+    # ४. My Progress 
     # ==========================================
     with main_tabs[3]:
         st.markdown(f"<h3 style='color: #1e3a8a;'>📈 Your Performance Analytics ({selected_subject})</h3>", unsafe_allow_html=True)
@@ -132,7 +213,6 @@
         if os.path.exists(results_path):
             try:
                 res_df = pd.read_csv(results_path)
-                # सध्या निवडलेल्या विषयानुसार फिल्टर करा
                 res_filtered = res_df[res_df['Subject'].astype(str).str.strip() == str(selected_subject).strip()]
                 
                 if not res_filtered.empty:
@@ -140,7 +220,6 @@
                     avg_per = res_filtered['Percentage'].mean()
                     highest_per = res_filtered['Percentage'].max()
                     
-                    # रियल मेट्रिक्स दाखवणे
                     col1, col2, col3 = st.columns(3)
                     col1.metric(label="Total Tests Attempted", value=str(total_tests))
                     col2.metric(label="Average Percentage", value=f"{avg_per:.1f}%")
@@ -149,11 +228,9 @@
                     st.write("---")
                     st.markdown("#### 📊 Test Score History:")
                     
-                    # टेबलमध्ये डेटा रिव्हर्स (नवीन आधी) दाखवणे
                     display_df = res_filtered[["Chapter", "Score", "Total", "Percentage", "Date"]].sort_index(ascending=False)
                     st.dataframe(display_df, use_container_width=True)
                     
-                    # प्रोग्रेस ग्राफ दाखवणे
                     st.write("---")
                     st.markdown("#### 📈 Progress Chart (Percentage Over Time):")
                     chart_data = res_filtered[["Date", "Percentage"]].set_index("Date")
