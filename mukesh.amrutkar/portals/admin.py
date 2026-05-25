@@ -437,8 +437,8 @@ def show_admin_panel():
                     st.download_button("📥 Download Answer HTML", data=st.session_state.board_ans_html, file_name=f"Board_80_Ans_Key_{board_sub}.html", mime="text/html", type="secondary", use_container_width=True)
                 
                 st.write("---")
-                if st.button("🤖 Generate AI Teacher's Solution for Board Paper", key="ai_board"):
-                    with st.spinner("⏳ AI is calculating solutions..."):
+                if st.button("🤖 Generate Solution for Board Paper", key="ai_board"):
+                    with st.spinner("⏳ Generating Solutions..."):
                         try:
                             model = genai.GenerativeModel('gemini-3.5-flash')
                             prompt = f"Provide a complete, step-by-step solution for this board exam paper (Use clean HTML tables for accounts):\n\n{st.session_state.board_paper_html}"
