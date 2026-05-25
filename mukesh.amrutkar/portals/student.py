@@ -41,11 +41,9 @@ def show_student_dashboard():
     # डेटा लोड 
     df = pd.read_csv(csv_path)
     
-    # ffill च्या आधी प्रश्न वेगळे करणे
     df['is_main_question'] = df['Chapter_Name'].notna() & (df['Chapter_Name'].astype(str).str.strip() != '')
     df['Question_ID'] = df['is_main_question'].cumsum()
 
-    # जर CSV मध्ये Subject कॉलम नसेल, तर तात्पुरता 'BK' म्हणून सेट करू
     if 'Subject' not in df.columns:
         df['Subject'] = 'BK'
 
@@ -53,7 +51,7 @@ def show_student_dashboard():
     df['Chapter_Name'] = df['Chapter_Name'].ffill()
     df['Category'] = df['Category'].ffill()
 
-    # 🔴 Objectives.csv मधील धडे (Chapters) शोधून ते QnA मध्ये मिक्स करण्यासाठी 
+    # Objectives.csv मधील धडे शोधणे 
     obj_csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
     if os.path.exists(obj_csv_path):
         obj_df = pd.read_csv(obj_csv_path)
@@ -64,7 +62,6 @@ def show_student_dashboard():
                 'Subject': obj_df['Subject'].dropna().astype(str).str.strip(),
                 'Chapter_Name': obj_df['No'].dropna().astype(str).str.strip()
             })
-            # दोन्ही फाईल्समधील विषय आणि धडे एकत्र करणे
             all_chapters_df = pd.concat([df[['Subject', 'Chapter_Name']], obj_chapters_df]).drop_duplicates()
         else:
             all_chapters_df = df[['Subject', 'Chapter_Name']].drop_duplicates()
@@ -86,11 +83,10 @@ def show_student_dashboard():
         chapter_list = all_chapters_df[all_chapters_df['Subject'].astype(str) == str(selected_subject)]['Chapter_Name'].dropna().astype(str).unique().tolist()
         selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
         
-    # खालील डेटा दाखवण्यासाठी QnA फाईल फिल्टर करा
+  
     df_filtered = df[(df['Subject'].astype(str).str.strip() == str(selected_subject).strip()) & 
                      (df['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip())]
 
-    # मुख्य ४ टॅब्स 
     main_tab_names = [
         "📚 Study Room", 
         "📄 Board Papers & Solutions", 
@@ -100,7 +96,7 @@ def show_student_dashboard():
     main_tabs = st.tabs(main_tab_names)
 
     # ==========================================
-    # १. Study Room (यात पहिले ३ टॅब्स येतील)
+    # १. Study Room 
     # ==========================================
     with main_tabs[0]:
         categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
@@ -171,7 +167,6 @@ def show_student_dashboard():
                         
                         st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
                         
-                        # AI जनरेट सोल्युशन
                         if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
                             if answer_text:
                                 st.info(f"💡 **Hint:** {answer_text}")
@@ -184,33 +179,41 @@ def show_student_dashboard():
                                         stream=True,
                                         request_options={"timeout": 600}
                                     )
-                                                                                         
                                     st.markdown("### 📝 Generated Solution:")
                                     res_box = st.empty()
                                     full_text = ""
-                                    
                                     for chunk in response:
                                         full_text += chunk.text
                                         res_box.markdown(full_text + " ▌")
-                                    
                                     res_box.markdown(full_text)
                                 except Exception as e:
                                     st.error(f"AI Error: {e}")
 
     # ==========================================
-    # २. Board Papers & Solutions
+    # २. Board Papers & Solutions (Download Button Restored)
     # ==========================================
     with main_tabs[1]:
         st.markdown(f"<h3 style='color: #1e3a8a;'>📄 Board Question Papers ({selected_subject})</h3>", unsafe_allow_html=True)
-        st.info(f"💡 Previous years' board question papers for {selected_subject} will be available here soon.")
+        st.info("💡 Download previous board papers to practice writing offline.")
         
         col1, col2 = st.columns([2, 1])
         with col1:
-            st.selectbox("🗓️ Select Exam Year / Exam Paper:", ["March 2024", "July 2023", "March 2023", "March 2022"])
+            paper_year = st.selectbox("🗓️ Select Exam Year / Exam Paper:", ["March 2024", "July 2023", "March 2023", "March 2022"])
         with col2:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.button("📥 Download PDF", disabled=True) 
-
+            
+            # Dummy PDF logic. In reality, you'd load the file from a 'pdfs' folder.
+            pdf_filename = f"{selected_subject}_Board_Paper_{paper_year.replace(' ', '_')}.pdf"
+            dummy_pdf_data = b"%PDF-1.4\n%Dummy PDF for testing"
+            
+            st.download_button(
+                label="📥 Download PDF",
+                data=dummy_pdf_data, 
+                file_name=pdf_filename,
+                mime="application/pdf",
+                type="primary"
+            )
+        
     # ==========================================
     # ३. Objective Test 
     # ==========================================
