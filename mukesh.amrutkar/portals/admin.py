@@ -1,90 +1,70 @@
 import streamlit as st
 import pandas as pd
 import os
-import google.generativeai as genai
 import textwrap
 from fpdf import FPDF
 
-# AI Configuration
-try:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-except:
-    pass
+# Professional PDF Generator
+class PDF(FPDF):
+    def header(self):
+        self.set_font("Arial", 'B', 15)
+        self.cell(0, 10, "MITRADNYA PUBLICATIONS", 0, 1, 'C')
+        self.set_font("Arial", '', 10)
+        self.cell(0, 5, "Professional Board Pattern Examination", 0, 1, 'C')
+        self.ln(10)
 
-# PDF Generator Function
-def create_pdf(text_data):
-    pdf = FPDF()
+def create_professional_pdf(html_content):
+    # आता आपण HTML वरून PDF बनवण्यासाठी simple text रूपांतरण वापरू जे क्रॅश होत नाही
+    pdf = PDF()
     pdf.add_page()
-    pdf.set_font("Courier", size=9)
-    pdf.set_auto_page_break(auto=True, margin=15)
-    clean_text = text_data.encode('latin-1', 'replace').decode('latin-1')
+    pdf.set_font("Arial", size=11)
+    
+    # रिप्लेसमेंट करून काही टॅग्स काढूया
+    clean_text = html_content.replace("<br>", "\n").replace("<b>", "").replace("</b>", "").replace("<td>", " | ").replace("<tr>", "\n")
+    
     for line in clean_text.split('\n'):
-        wrapped_lines = textwrap.wrap(line, width=80, break_long_words=True, replace_whitespace=False)
-        for w_line in wrapped_lines:
-            pdf.multi_cell(0, 5, txt=w_line)
-    out = pdf.output()
-    return out.encode('latin-1') if isinstance(out, str) else bytes(out)
+        if line.strip():
+            pdf.multi_cell(0, 7, txt=line)
+    return bytes(pdf.output(dest='S'))
 
 def show_admin_panel():
-    st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - AI Paper Generator</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #1e3a8a;'>🏛️ Mitradnya Professional Paper Generator</h2>", unsafe_allow_html=True)
     
-    # Load Data
     qna_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
     if not os.path.exists(qna_path):
-        st.error("⚠️ QnA.csv file missing!")
+        st.error("⚠️ Data file not found!")
         return
     qna_df = pd.read_csv(qna_path).astype(str).apply(lambda x: x.str.strip())
     
     all_subjects = qna_df['Subject'].unique().tolist()
-    selected_sub = st.selectbox("🎯 Select Subject:", all_subjects)
+    sub = st.selectbox("Select Subject:", all_subjects)
+    chaps = st.multiselect("Select Chapters:", sorted(qna_df[qna_df['Subject'] == sub]['Chapter_Name'].unique().tolist()))
     
-    all_chaps = sorted(qna_df[qna_df['Subject'] == selected_sub]['Chapter_Name'].unique().tolist())
-    selected_chaps = st.multiselect("📑 Select Chapters:", all_chaps, default=all_chaps[:1])
-        
-    # Question Types
-    st.markdown("##### 🎯 Select Question Types:")
+    st.markdown("##### Select Question Types:")
     c1, c2, c3 = st.columns(3)
-    with c1: use_prac = st.checkbox("Practical Problems", value=True)
-    with c2: use_short = st.checkbox("Short Notes", value=True)
-    with c3: use_theory = st.checkbox("Theory Questions", value=True)
+    with c1: prac = st.checkbox("Practical", value=True)
+    with c2: short = st.checkbox("Short Notes", value=True)
+    with c3: theory = st.checkbox("Theory", value=True)
     
-    if st.button("🚀 Generate Paper & AI Solutions"):
+    if st.button("🚀 Generate Professional Paper"):
         cats = []
-        if use_prac: cats.append('Exercise_Problems')
-        if use_short: cats.append('Short_Notes')
-        if use_theory: cats.append('One_Sentence')
+        if prac: cats.append('Exercise_Problems')
+        if short: cats.append('Short_Notes')
+        if theory: cats.append('One_Sentence')
         
-        paper = qna_df[(qna_df['Subject'] == selected_sub) & 
-                       (qna_df['Chapter_Name'].isin(selected_chaps)) & 
-                       (qna_df['Category'].isin(cats))]
+        paper = qna_df[(qna_df['Subject'] == sub) & (qna_df['Chapter_Name'].isin(chaps)) & (qna_df['Category'].isin(cats))]
         
-        if paper.empty:
-            st.warning("⚠️ No questions found for these selections!")
-        else:
-            st.success(f"✅ {len(paper)} questions generated.")
-            
-            paper_txt = "QUESTION PAPER\n\n"
-            ans_txt = "AI GENERATED ANSWER KEY\n\n"
-            
-            # Display & AI
+        if not paper.empty:
+            # Displaying in Professional HTML Format
+            html_paper = f"<h3>Subject: {sub}</h3><hr>"
             for i, row in paper.iterrows():
-                st.write(f"**Q{i+1}:** {row['Question_Text']}")
-                paper_txt += f"Q{i+1}: {row['Question_Text']}\n\n"
-                
-                with st.expander(f"Generate Answer for Q{i+1}"):
-                    if st.button(f"Generate Solution {i+1}", key=f"ai_{i}"):
-                        with st.spinner("AI is thinking..."):
-                            model = genai.GenerativeModel('gemini-1.5-flash')
-                            response = model.generate_content(f"Answer: {row['Question_Text']}")
-                            st.info(f"**Ans:** {response.text}")
-                            ans_txt += f"Ans {i+1}: {response.text}\n\n"
+                html_paper += f"<p><b>Q{i+1}.</b> {row['Question_Text']}</p>"
+            
+            st.markdown(html_paper, unsafe_allow_html=True)
             
             # Download
-            col_d1, col_d2 = st.columns(2)
-            with col_d1:
-                st.download_button("📥 PDF Paper", data=create_pdf(paper_txt), file_name="Paper.pdf", mime="application/pdf")
-            with col_d2:
-                st.download_button("📥 PDF Answer Key", data=create_pdf(ans_txt), file_name="Answer_Key.pdf", mime="application/pdf")
+            st.download_button("📥 Download Professional PDF", data=create_professional_pdf(html_paper), file_name="Exam_Paper.pdf", mime="application/pdf")
+        else:
+            st.warning("No questions found!")
 
-# Final Call
 show_admin_panel()
