@@ -53,6 +53,24 @@ def show_student_dashboard():
     df['Chapter_Name'] = df['Chapter_Name'].ffill()
     df['Category'] = df['Category'].ffill()
 
+    # 🔴 Objectives.csv मधील धडे (Chapters) शोधून ते QnA मध्ये मिक्स करण्यासाठी 
+    obj_csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
+    if os.path.exists(obj_csv_path):
+        obj_df = pd.read_csv(obj_csv_path)
+        if 'Subject' not in obj_df.columns:
+            obj_df['Subject'] = 'BK'
+        if 'No' in obj_df.columns:
+            obj_chapters_df = pd.DataFrame({
+                'Subject': obj_df['Subject'].dropna().astype(str).str.strip(),
+                'Chapter_Name': obj_df['No'].dropna().astype(str).str.strip()
+            })
+            # दोन्ही फाईल्समधील विषय आणि धडे एकत्र करणे
+            all_chapters_df = pd.concat([df[['Subject', 'Chapter_Name']], obj_chapters_df]).drop_duplicates()
+        else:
+            all_chapters_df = df[['Subject', 'Chapter_Name']].drop_duplicates()
+    else:
+        all_chapters_df = df[['Subject', 'Chapter_Name']].drop_duplicates()
+
     # ==============================================================
     # २ स्तरांचे ग्लोबल फिल्टर (Subject -> Chapter)
     # ==============================================================
@@ -61,16 +79,16 @@ def show_student_dashboard():
     col_sub, col_chap = st.columns(2)
     
     with col_sub:
-        subject_list = df['Subject'].dropna().astype(str).unique().tolist()
+        subject_list = all_chapters_df['Subject'].dropna().astype(str).unique().tolist()
         selected_subject = st.selectbox("Select Subject", subject_list, key="global_subject_select")
         
-    df_subject = df[df['Subject'].astype(str).str.strip() == str(selected_subject).strip()]
-    
     with col_chap:
-        chapter_list = df_subject['Chapter_Name'].dropna().astype(str).unique().tolist()
+        chapter_list = all_chapters_df[all_chapters_df['Subject'].astype(str) == str(selected_subject)]['Chapter_Name'].dropna().astype(str).unique().tolist()
         selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
         
-    df_filtered = df_subject[df_subject['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip()]
+    # खालील डेटा दाखवण्यासाठी QnA फाईल फिल्टर करा
+    df_filtered = df[(df['Subject'].astype(str).str.strip() == str(selected_subject).strip()) & 
+                     (df['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip())]
 
     # मुख्य ४ टॅब्स 
     main_tab_names = [
@@ -200,7 +218,7 @@ def show_student_dashboard():
         if 'quiz_manager' in globals() and hasattr(quiz_manager, 'load_objective_test'):
             quiz_manager.load_objective_test(selected_subject, selected_chapter)
         else:
-            st.error("⚠️ quiz_manager.py file not found in utils folder.") # 🔴 FIXED INDENTATION HERE
+            st.error("⚠️ quiz_manager.py file not found in utils folder.")
 
     # ==========================================
     # ४. My Progress 
