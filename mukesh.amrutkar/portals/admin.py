@@ -133,14 +133,14 @@ def show_admin_panel():
                 else:
                     st.markdown("🏢", unsafe_allow_html=True) # Placeholder icon
             with col_title:
-                st.markdown("<h2 style='color: #1e3a8a; margin-bottom: 0;'>MITRADNYA PUBLICATIONS</h2>", unsafe_allow_html=True)
+                st.markdown("<h2 style='color: #1e3a8a; margin-bottom: 0;'>MITRADNYA PUBLICATION'S</h2>", unsafe_allow_html=True)
                 st.markdown(f"**Subject:** {sel_sub} | **Chapters:** {', '.join(sel_chaps)}")
             
             st.markdown("<hr style='border: 2px solid #1e3a8a;'>", unsafe_allow_html=True)
             
             # Text file content builder (with proper line breaks)
             txt_content = "========================================\r\n"
-            txt_content += "        MITRADNYA PUBLICATIONS\r\n"
+            txt_content += "        MITRADNYA PUBLICATION'S\r\n"
             txt_content += "========================================\r\n"
             txt_content += f"Subject: {sel_sub}\r\n"
             txt_content += f"Chapters: {', '.join(sel_chaps)}\r\n"
@@ -189,7 +189,7 @@ def show_admin_panel():
                                     for r_idx, t_row in enumerate(table_data):
                                         html_table += "<tr>"
                                         for col in t_row:
-                                            if r_idx == 0: html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
+                                            if r_idx == 0: html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                             else: html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                         html_table += "</tr>"
                                     html_table += "</table>"
@@ -206,7 +206,7 @@ def show_admin_panel():
                             for r_idx, t_row in enumerate(table_data):
                                 html_table += "<tr>"
                                 for col in t_row:
-                                    if r_idx == 0: html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
+                                    if r_idx == 0: html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                     else: html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                 html_table += "</tr>"
                             html_table += "</table>"
@@ -217,9 +217,9 @@ def show_admin_panel():
 
             st.write("")
             st.download_button(
-                label="📥 Download Paper (.txt)",
+                label="📥 Download Paper (.pdf)",
                 data=txt_content,
-                file_name=f"{sel_sub}_Question_Paper.txt",
+                file_name=f"{sel_sub}_Question_Paper.pdf",
                 mime="text/plain",
                 type="primary"
             )
@@ -279,9 +279,9 @@ def show_admin_panel():
 
             st.write("")
             st.download_button(
-                label="📥 Download Answer Key (.txt)",
+                label="📥 Download Answer Key (.pdf)",
                 data=ans_content,
-                file_name=f"{sel_sub}_Answer_Key.txt",
+                file_name=f"{sel_sub}_Answer_Key.pdf",
                 mime="text/plain",
                 type="primary"
             )
