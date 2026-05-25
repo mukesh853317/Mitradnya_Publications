@@ -33,17 +33,17 @@ def create_pdf(text_data):
                 pass
                 
     out = pdf.output()
-    # ðŸ”´ à¤¹à¥€ à¤“à¤³ à¤œà¥à¤¨à¥à¤¯à¤¾ à¤†à¤£à¤¿ à¤¨à¤µà¥à¤¯à¤¾ à¤¦à¥‹à¤¨à¥à¤¹à¥€ à¤²à¤¾à¤¯à¤¬à¥à¤°à¤°à¥€à¤²à¤¾ à¤¸à¤ªà¥‹à¤°à¥à¤Ÿ à¤•à¤°à¥‡à¤² à¤†à¤£à¤¿ à¤•à¥à¤°à¥…à¤¶ à¤¹à¥‹à¤£à¤¾à¤° à¤¨à¤¾à¤¹à¥€
+    # 🔴 ही ओळ जुन्या आणि नव्या दोन्ही लायब्ररीला सपोर्ट करेल आणि क्रॅश होणार नाही
     if isinstance(out, str):
         return out.encode('latin-1')
     return bytes(out)
 
 def show_admin_panel():
-    st.markdown("<h2 style='color: #1e3a8a;'>ðŸ‘¨â€ðŸ« Admin Portal - Paper Generator</h2>", unsafe_allow_html=True)
-    st.info("ðŸ’¡ Create fully formatted Question Papers in PDF format. Select the 'Strict Board Paper' tab to generate a perfect 80-marks Maharashtra Board paper with 'OR' options.")
+    st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - Paper Generator</h2>", unsafe_allow_html=True)
+    st.info("💡 Create fully formatted Question Papers in PDF format. Select the 'Strict Board Paper' tab to generate a perfect 80-marks Maharashtra Board paper with 'OR' options.")
     
     if not FPDF_AVAILABLE:
-        st.warning("âš ï¸ 'fpdf2' library is missing! Papers will be downloaded as TXT. Please add `fpdf2` to your requirements.txt file to enable PDF downloads.")
+        st.warning("⚠️ 'fpdf2' library is missing! Papers will be downloaded as TXT. Please add `fpdf2` to your requirements.txt file to enable PDF downloads.")
         
     try:
         api_key = st.secrets["GOOGLE_API_KEY"]
@@ -57,7 +57,7 @@ def show_admin_panel():
     obj_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
     
     if not os.path.exists(qna_path) or not os.path.exists(obj_path):
-        st.error("âš ï¸ QnA.csv or Objectives.csv files not found in the 'data' folder!")
+        st.error("⚠️ QnA.csv or Objectives.csv files not found in the 'data' folder!")
         return
 
     qna_df = pd.read_csv(qna_path)
@@ -80,7 +80,7 @@ def show_admin_panel():
 
     all_subjects = list(set(qna_df['Subject'].unique()).union(set(obj_df['Subject'].unique())))
 
-    paper_tabs = st.tabs(["ðŸ›ï¸ Strict Board Paper (80 Marks)", "ðŸ“ Custom Practice Paper"])
+    paper_tabs = st.tabs(["🏛️ Strict Board Paper (80 Marks)", "📝 Custom Practice Paper"])
     
     def get_full_q_both(q_id, df):
         group = df[df['Question_ID'] == q_id]
@@ -118,21 +118,21 @@ def show_admin_panel():
     # TAB 1: STRICT BOARD PAPER (80 MARKS)
     # =========================================================
     with paper_tabs[0]:
-        st.markdown("#### ðŸ“ 1. Paper Header")
+        st.markdown("#### 📝 1. Paper Header")
         col_b1, col_b2, col_b3 = st.columns(3)
         with col_b1:
-            board_sub = st.selectbox("ðŸ“š Select Subject:", all_subjects, key="board_sub")
+            board_sub = st.selectbox("📚 Select Subject:", all_subjects, key="board_sub")
         with col_b2:
-            board_branch = st.text_input("ðŸ¢ Branch Name:", value="Ambernath", key="board_branch")
+            board_branch = st.text_input("🏢 Branch Name:", value="Ambernath", key="board_branch")
         with col_b3:
-            board_date = st.date_input("ðŸ—“ï¸ Exam Date:", datetime.date.today(), key="board_date")
+            board_date = st.date_input("🗓️ Exam Date:", datetime.date.today(), key="board_date")
 
         all_chaps = sorted(list(set(qna_df[qna_df['Subject'] == board_sub]['Chapter_Name'].unique()).union(set(obj_df[obj_df['Subject'] == board_sub]['Chapter_Name'].unique()))))
         
         st.write("---")
         
         if board_sub.strip().upper() in ['BK', 'BOOK KEEPING', 'BOOK-KEEPING', 'BOOK KEEPING & ACCOUNTANCY']:
-            st.markdown(f"#### âš™ï¸ 2. Chapter Assignments (BK Pattern)")
+            st.markdown(f"#### ⚙️ 2. Chapter Assignments (BK Pattern)")
             st.info("Q.1 Objective Questions (15 Marks) will be drawn randomly from the entire syllabus.")
             
             if not all_chaps:
@@ -158,8 +158,8 @@ def show_admin_panel():
                     st.session_state.board_ans_html = ""
                     st.session_state.board_paper_txt = ""
 
-                if st.button("ðŸš€ Generate 80-Marks BK Paper", type="primary", key="gen_board_bk"):
-                    with st.spinner("â³ Compiling BK Board Pattern Paper..."):
+                if st.button("🚀 Generate 80-Marks BK Paper", type="primary", key="gen_board_bk"):
+                    with st.spinner("⏳ Compiling BK Board Pattern Paper..."):
                         main_qna_sub = qna_df[(qna_df['Subject'] == board_sub) & (qna_df['is_main_question'] == True)]
                         obj_sub = obj_df[obj_df['Subject'] == board_sub]
                         
@@ -282,8 +282,8 @@ def show_admin_panel():
                         st.rerun()
 
         else:
-            st.markdown(f"#### âš™ï¸ 2. Chapter Assignments (Theory Pattern - {board_sub})")
-            st.info(f"ðŸ’¡ Since {board_sub} is a theory subject, a standard 80-marks Theory Pattern will be applied.")
+            st.markdown(f"#### ⚙️ 2. Chapter Assignments (Theory Pattern - {board_sub})")
+            st.info(f"💡 Since {board_sub} is a theory subject, a standard 80-marks Theory Pattern will be applied.")
             
             if not all_chaps:
                 st.error("No chapters found for this subject.")
@@ -304,8 +304,8 @@ def show_admin_panel():
                     st.session_state.board_paper_txt = ""
                     st.session_state.board_ans_html = ""
 
-                if st.button(f"ðŸš€ Generate 80-Marks {board_sub} Paper", type="primary", key="gen_board_other"):
-                    with st.spinner(f"â³ Compiling {board_sub} Board Pattern Paper..."):
+                if st.button(f"🚀 Generate 80-Marks {board_sub} Paper", type="primary", key="gen_board_other"):
+                    with st.spinner(f"⏳ Compiling {board_sub} Board Pattern Paper..."):
                         main_qna_sub = qna_df[(qna_df['Subject'] == board_sub) & (qna_df['is_main_question'] == True)]
                         obj_sub = obj_df[obj_df['Subject'] == board_sub]
                         
@@ -405,10 +405,10 @@ def show_admin_panel():
                         st.rerun()
 
         if st.session_state.get('board_paper_generated'):
-            st.markdown("### ðŸ–¨ï¸ Board Paper Preview & Download")
-            st.success("âœ… 80-Marks Board Paper Generated! Tables are formatted correctly.")
+            st.markdown("### 🖨️ Board Paper Preview & Download")
+            st.success("✅ 80-Marks Board Paper Generated! Tables are formatted correctly.")
             
-            p_tabs = st.tabs(["ðŸ“„ Question Paper", "ðŸ“ Answer Key & AI Reference"])
+            p_tabs = st.tabs(["📄 Question Paper", "📝 Answer Key & AI Reference"])
             with p_tabs[0]:
                 with st.container(border=True):
                     st.markdown(st.session_state.board_paper_html, unsafe_allow_html=True)
@@ -417,9 +417,9 @@ def show_admin_panel():
                 with col_btn1:
                     if FPDF_AVAILABLE:
                         pdf_bytes = create_pdf(st.session_state.board_paper_txt)
-                        st.download_button("ðŸ“¥ Download PDF", data=pdf_bytes, file_name=f"Board_80_Marks_{board_sub}.pdf", mime="application/pdf", type="primary", use_container_width=True)
+                        st.download_button("📥 Download PDF", data=pdf_bytes, file_name=f"Board_80_Marks_{board_sub}.pdf", mime="application/pdf", type="primary", use_container_width=True)
                 with col_btn2:
-                    st.download_button("ðŸ“¥ Download HTML (For Print)", data=st.session_state.board_paper_html, file_name=f"Board_80_Marks_{board_sub}.html", mime="text/html", type="secondary", use_container_width=True)
+                    st.download_button("📥 Download HTML (For Print)", data=st.session_state.board_paper_html, file_name=f"Board_80_Marks_{board_sub}.html", mime="text/html", type="secondary", use_container_width=True)
 
             with p_tabs[1]:
                 with st.container(border=True):
@@ -427,11 +427,11 @@ def show_admin_panel():
                 
                 col_ab1, col_ab2 = st.columns(2)
                 with col_ab1:
-                    st.download_button("ðŸ“¥ Download Answer HTML", data=st.session_state.board_ans_html, file_name=f"Board_80_Ans_Key_{board_sub}.html", mime="text/html", type="secondary", use_container_width=True)
+                    st.download_button("📥 Download Answer HTML", data=st.session_state.board_ans_html, file_name=f"Board_80_Ans_Key_{board_sub}.html", mime="text/html", type="secondary", use_container_width=True)
                 
                 st.write("---")
-                if st.button("ðŸ¤– Generate AI Teacher's Solution for Board Paper", key="ai_board"):
-                    with st.spinner("â³ AI is calculating solutions..."):
+                if st.button("🤖 Generate AI Teacher's Solution for Board Paper", key="ai_board"):
+                    with st.spinner("⏳ AI is calculating solutions..."):
                         try:
                             model = genai.GenerativeModel('gemini-3.5-flash')
                             prompt = f"Provide a complete, step-by-step solution for this board exam paper (Use clean HTML tables for accounts):\n\n{st.session_state.board_paper_html}"
@@ -440,7 +440,7 @@ def show_admin_panel():
                             full_text = ""
                             for chunk in response:
                                 full_text += chunk.text
-                                res_box.markdown(full_text + " â–Œ")
+                                res_box.markdown(full_text + " ▌")
                             res_box.markdown(full_text)
                         except Exception as e:
                             st.error(f"AI Error: {e}")
@@ -449,17 +449,17 @@ def show_admin_panel():
     # TAB 2: CUSTOM PRACTICE PAPER
     # =========================================================
     with paper_tabs[1]:
-        st.markdown("#### âš™ï¸ Custom Paper Settings")
+        st.markdown("#### ⚙️ Custom Paper Settings")
         col_h1, col_h2, col_h3 = st.columns(3)
         with col_h1:
-            c_sub = st.selectbox("ðŸ“š Select Subject:", all_subjects, key="c_sub")
+            c_sub = st.selectbox("📚 Select Subject:", all_subjects, key="c_sub")
         with col_h2:
-            c_branch = st.text_input("ðŸ¢ Branch Name:", value="Ambernath", key="c_branch")
+            c_branch = st.text_input("🏢 Branch Name:", value="Ambernath", key="c_branch")
         with col_h3:
-            c_date = st.date_input("ðŸ—“ï¸ Exam Date:", datetime.date.today(), key="c_date")
+            c_date = st.date_input("🗓️ Exam Date:", datetime.date.today(), key="c_date")
             
         c_chaps = sorted(list(set(qna_df[qna_df['Subject'] == c_sub]['Chapter_Name'].unique()).union(set(obj_df[obj_df['Subject'] == c_sub]['Chapter_Name'].unique()))))
-        c_sel_chaps = st.multiselect("ðŸ“‘ Select Chapters for Custom Test:", c_chaps, default=c_chaps[:1] if c_chaps else None, key="c_chaps")
+        c_sel_chaps = st.multiselect("📑 Select Chapters for Custom Test:", c_chaps, default=c_chaps[:1] if c_chaps else None, key="c_chaps")
 
         col_p1, col_p2, col_p3 = st.columns(3)
         with col_p1:
@@ -478,11 +478,11 @@ def show_admin_panel():
         if 'c_paper_gen' not in st.session_state:
             st.session_state.c_paper_gen = False
 
-        if st.button("ðŸš€ Generate Custom Paper", type="primary", key="c_gen_btn"):
+        if st.button("🚀 Generate Custom Paper", type="primary", key="c_gen_btn"):
             if not c_sel_chaps:
-                st.warning("âš ï¸ Please select at least one chapter!")
+                st.warning("⚠️ Please select at least one chapter!")
             else:
-                with st.spinner("â³ Generating..."):
+                with st.spinner("⏳ Generating..."):
                     filtered_obj = obj_df[(obj_df['Subject'] == c_sub) & (obj_df['Chapter_Name'].isin(c_sel_chaps))]
                     final_mcqs = filtered_obj.sample(min(c_mcq, len(filtered_obj))).reset_index(drop=True) if not filtered_obj.empty else pd.DataFrame()
                         
@@ -524,7 +524,7 @@ def show_admin_panel():
                     st.rerun()
 
         if st.session_state.get('c_paper_gen'):
-            st.markdown("### ðŸ–¨ï¸ Custom Paper Preview")
+            st.markdown("### 🖨️ Custom Paper Preview")
             with st.container(border=True):
                 st.markdown(st.session_state.c_p_html, unsafe_allow_html=True)
             
@@ -532,6 +532,6 @@ def show_admin_panel():
             with col_d1:
                 if FPDF_AVAILABLE:
                     c_pdf_bytes = create_pdf(st.session_state.c_p_txt)
-                    st.download_button("ðŸ“¥ Download Custom PDF", data=c_pdf_bytes, file_name=f"Custom_Paper_{c_sub}.pdf", mime="application/pdf", type="primary", use_container_width=True)
+                    st.download_button("📥 Download Custom PDF", data=c_pdf_bytes, file_name=f"Custom_Paper_{c_sub}.pdf", mime="application/pdf", type="primary", use_container_width=True)
             with col_d2:
-                st.download_button("ðŸ“¥ Download Custom HTML", data=st.session_state.c_p_html, file_name=f"Custom_Paper.html", mime="text/html", type="secondary", use_container_width=True)
+                st.download_button("📥 Download Custom HTML", data=st.session_state.c_p_html, file_name=f"Custom_Paper.html", mime="text/html", type="secondary", use_container_width=True)
