@@ -433,7 +433,6 @@ def show_admin_panel():
                 with col_ab1:
                     st.download_button("📥 Download Answer HTML", data=st.session_state.board_ans_html, file_name=f"Board_80_Ans_Key_{board_sub}.html", mime="text/html", type="secondary", use_container_width=True)
                 
-                st.write("---")
                 if st.button("🤖 Generate Solution for Board Paper", key="ai_board"):
                     with st.spinner("⏳ Generating Solutions..."):
                         try:
@@ -477,8 +476,7 @@ def show_admin_panel():
             c_tot = (c_mcq * c_mcq_m) + (c_th * c_th_m)
             st.markdown(f"<br><h4 style='color: #166534;'>Total Marks: {c_tot}</h4>", unsafe_allow_html=True)
             
-        st.write("---")
-        
+              
         if 'c_paper_gen' not in st.session_state:
             st.session_state.c_paper_gen = False
 
