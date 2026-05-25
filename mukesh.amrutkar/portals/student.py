@@ -98,8 +98,8 @@ def show_student_dashboard():
     # १. Study Room 
     # ==========================================
     with main_tabs[0]:
-        categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
-        sub_tab_names = ["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
+        categories = ["IMP_Proforma", "Short_Notes", "Exercise_Problems", "Extra_Practical"]
+        sub_tab_names = ["📑 IMP Proforma", "📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
         sub_tabs = st.tabs(sub_tab_names)
 
         for i in range(3):
