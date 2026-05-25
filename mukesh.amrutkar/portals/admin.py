@@ -2,56 +2,85 @@ import streamlit as st
 import pandas as pd
 import os
 import google.generativeai as genai
+import textwrap
+from fpdf import FPDF
 
-# AI Configuration
+# AI Setup
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 except:
     pass
 
+# PDF Generator Function
+def create_pdf(text_data):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Courier", size=9)
+    pdf.set_auto_page_break(auto=True, margin=15)
+    clean_text = text_data.encode('latin-1', 'replace').decode('latin-1')
+    for line in clean_text.split('\n'):
+        wrapped_lines = textwrap.wrap(line, width=80, break_long_words=True, replace_whitespace=False)
+        for w_line in wrapped_lines:
+            pdf.multi_cell(0, 5, txt=w_line)
+    return bytes(pdf.output())
+
 def show_admin_panel():
-    st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - Automatic Solution Generator</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - AI Paper Generator</h2>", unsafe_allow_html=True)
     
     qna_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
     if not os.path.exists(qna_path):
-        st.error("⚠️ QnA.csv File not Found!")
+        st.error("⚠️ QnA.csv file missing!")
         return
     qna_df = pd.read_csv(qna_path).astype(str).apply(lambda x: x.str.strip())
     
     all_subjects = qna_df['Subject'].unique().tolist()
     selected_sub = st.selectbox("🎯 Select Subject:", all_subjects)
     
-    # चेकबॉक्सेस
-    st.markdown("##### 🎯 Select Questions:")
+    all_chaps = sorted(qna_df[qna_df['Subject'] == selected_sub]['Chapter_Name'].unique().tolist())
+    selected_chaps = st.multiselect("📑 Select Chapters:", all_chaps, default=all_chaps[:1])
+        
+    # 🎯 Question Types Selection
+    st.markdown("##### 🎯 Select Question Types:")
     c1, c2, c3 = st.columns(3)
-    with c1: use_prac = st.checkbox("Practical", value=True)
+    with c1: use_prac = st.checkbox("Practical Problems", value=True)
     with c2: use_short = st.checkbox("Short Notes", value=True)
-    with c3: use_theory = st.checkbox("Theory", value=True)
+    with c3: use_theory = st.checkbox("Theory Questions", value=True)
     
-    if st.button("🚀 Generate Paper & Solution"):
+    if st.button("🚀 Generate Paper & AI Solutions"):
         cats = []
         if use_prac: cats.append('Exercise_Problems')
         if use_short: cats.append('Short_Notes')
         if use_theory: cats.append('One_Sentence')
         
-        paper = qna_df[(qna_df['Subject'] == selected_sub) & (qna_df['Category'].isin(cats))]
+        paper = qna_df[(qna_df['Subject'] == selected_sub) & 
+                       (qna_df['Chapter_Name'].isin(selected_chaps)) & 
+                       (qna_df['Category'].isin(cats))]
         
-        if not paper.empty:
-            st.success("✅ Paper is Ready!")
+        if paper.empty:
+            st.warning("⚠️ No questions found!")
+        else:
+            st.success(f"✅ {len(paper)} questions generated.")
+            
+            paper_txt = "QUESTION PAPER\n\n"
+            ans_txt = "AI GENERATED ANSWER KEY\n\n"
             
             for i, row in paper.iterrows():
                 st.write(f"**Q{i+1}:** {row['Question_Text']}")
+                paper_txt += f"Q{i+1}: {row['Question_Text']}\n\n"
                 
-                # 🔴 AUTOMATIC ANSWER GENERATOR
-                if row.get('Answer') == 'nan' or not row.get('Answer'):
-                    if st.button(f"Generate Answer for Q{i+1}", key=f"ai_{i}"):
-                        with st.spinner("Generating Answer..."):
-                            model = genai.GenerativeModel('gemini-3.5-flash')
-                            response = model.generate_content(f"Answer this question shortly: {row['Question_Text']}")
-                            st.info(f"Ans: {response.text}")
-                else:
-                    st.write(f"**Ans:** {row['Answer']}")
-        else:
-            st.warning("⚠️ प्रश्न सापडले नाहीत!")
+                # AI Solution
+                with st.spinner(f"AI generating solution for Q{i+1}..."):
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    response = model.generate_content(f"Provide a clear, detailed answer for this question: {row['Question_Text']}")
+                    ans_text = response.text
+                    st.info(f"**Ans:** {ans_text}")
+                    ans_txt += f"Ans {i+1}: {ans_text}\n\n"
+            
+            # Download PDF
+            col_d1, col_d2 = st.columns(2)
+            with col_d1:
+                st.download_button("📥 PDF Paper", data=create_pdf(paper_txt), file_name="Paper.pdf", mime="application/pdf")
+            with col_d2:
+                st.download_button("📥 PDF Answer Key", data=create_pdf(ans_txt), file_name="Answer_Key.pdf", mime="application/pdf")
 
 show_admin_panel()
