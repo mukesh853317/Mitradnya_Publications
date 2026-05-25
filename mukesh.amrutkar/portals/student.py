@@ -60,8 +60,7 @@ def show_student_dashboard():
         return
         
     selected_chapter = st.selectbox("Choose Chapter", chapter_list, label_visibility="collapsed")
-    st.write("---")
-
+  
     # 🔴 निवडलेल्या चॅप्टरनुसार संपूर्ण डेटा फिल्टर करा
     df_filtered = df[df['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip()]
 
