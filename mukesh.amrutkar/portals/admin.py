@@ -117,76 +117,45 @@ def show_admin_panel():
 
                     formatted_date = exam_date.strftime('%d-%m-%Y')
                     
-                    p_text = f"========================================
-"
-                    p_text += f"        MITRADNYA PUBLICATIONS
-"
-                    p_text += f"========================================
-"
-                    p_text += f"Branch: {branch_name}          Date: {formatted_date}
-"
-                    p_text += f"Subject: {selected_subject}             Time: {total_time}
-"
-                    p_text += f"Total Marks: {calculated_total} Marks
-"
-                    p_text += f"Chapters: {', '.join(selected_chapters)}
-"
-                    p_text += f"----------------------------------------
-
-"
+                    p_text = f"========================================\n"
+                    p_text += f"        MITRADNYA PUBLICATION'S\n"
+                    p_text += f"========================================\n"
+                    p_text += f"Branch: {branch_name}          Date: {formatted_date}\n"
+                    p_text += f"Subject: {selected_subject}             Time: {total_time}\n"
+                    p_text += f"Total Marks: {calculated_total} Marks\n"
+                    p_text += f"Chapters: {', '.join(selected_chapters)}\n"
+                    p_text += f"----------------------------------------\n\n"
                     
                     if not final_mcqs.empty:
-                        p_text += f"Q.1 Choose the correct alternative and rewrite the sentence. [Marks: {num_mcq * mcq_marks}]
-
-"
+                        p_text += f"Q.1 Choose the correct alternative and rewrite the sentence. [Marks: {num_mcq * mcq_marks}]\n\n"
                         for idx, row in final_mcqs.iterrows():
-                            p_text += f"({idx+1}) {row['Question']}
-"
-                            p_text += f"    A) {row['Option A']}   B) {row['Option B']}   C) {row['Option C']}   D) {row['Option D']}
-
-"
+                            p_text += f"({idx+1}) {row['Question']}\n"
+                            p_text += f"    A) {row['Option A']}   B) {row['Option B']}   C) {row['Option C']}   D) {row['Option D']}\n\n"
                     
                     if not final_theory.empty:
-                        p_text += f"Q.2 Solve the following Practical / Theory problems. [Marks: {num_theory * theory_marks} (Each carries {theory_marks} Marks)]
-
-"
+                        p_text += f"Q.2 Solve the following Practical / Theory problems. [Marks: {num_theory * theory_marks} (Each carries {theory_marks} Marks)]\n\n"
                         for idx, row in final_theory.iterrows():
                             q_id = row['Question_ID']
                             group = qna_df[qna_df['Question_ID'] == q_id]
-                            full_q_text = "
-".join([str(r.get('Question_Text', '')).strip() for _, r in group.iterrows() if str(r.get('Question_Text', '')).strip() != 'nan'])
-                            p_text += f"({idx+1}) {full_q_text}
-"
-                            p_text += f"----------------------------------------
+                            full_q_text = "\n".join([str(r.get('Question_Text', '')).strip() for _, r in group.iterrows() if str(r.get('Question_Text', '')).strip() != 'nan'])
+                            p_text += f"({idx+1}) {full_q_text}\n"
+                            p_text += f"----------------------------------------\n\n"
 
-"
-
-                    a_text = f"========================================
-"
-                    a_text += f"    MITRADNYA PUBLICATIONS - ANSWER KEY
-"
-                    a_text += f"========================================
-"
-                    a_text += f"Subject: {selected_subject} | Date: {formatted_date}
-
-"
+                    a_text = f"========================================\n"
+                    a_text += f"   MITRADNYA PUBLICATION'S - ANSWER KEY\n"
+                    a_text += f"========================================\n"
+                    a_text += f"Subject: {selected_subject} | Date: {formatted_date}\n\n"
                     
                     if not final_mcqs.empty:
-                        a_text += f"--- Q.1 MCQ ANSWERS ---
-"
+                        a_text += f"--- Q.1 MCQ ANSWERS ---\n"
                         for idx, row in final_mcqs.iterrows():
-                            a_text += f"{idx+1}. Correct Answer: {row['Correct Answer (Full Text)']}
-"
-                        a_text += f"
-"
+                            a_text += f"{idx+1}. Correct Answer: {row['Correct Answer (Full Text)']}\n"
+                        a_text += f"\n"
                     
                     if not final_theory.empty:
-                        a_text += f"--- Q.2 PRACTICAL SOLUTIONS ---
-"
+                        a_text += f"--- Q.2 PRACTICAL SOLUTIONS ---\n"
                         for idx, row in final_theory.iterrows():
-                            a_text += f"Question {idx+1} Solution Hint: Refer to AI Solutions or textbook answers.
-
-"
+                            a_text += f"Question {idx+1} Solution Hint: Refer to Solutions or textbook answers.\n\n"
 
                     st.session_state.custom_p_text = p_text
                     st.session_state.custom_a_text = a_text
@@ -201,28 +170,22 @@ def show_admin_panel():
             with out_tabs[0]:
                 st.success("✅ Custom Paper generated successfully!")
                 with st.container(border=True):
-                    st.markdown(f"```text
-{st.session_state.custom_p_text}
-```")
+                    st.markdown(f"```text\n{st.session_state.custom_p_text}\n```")
                 st.write("---")
-                st.download_button("📥 Download Custom Paper (.txt)", data=st.session_state.custom_p_text, file_name=f"Custom_Paper_{selected_subject}.txt", mime="text/plain", type="primary", use_container_width=True)
+                st.download_button("📥 Download Custom Paper (.pdf)", data=st.session_state.custom_p_text, file_name=f"Custom_Paper_{selected_subject}.txt", mime="text/plain", type="primary", use_container_width=True)
 
             with out_tabs[1]:
                 with st.container(border=True):
-                    st.markdown(f"```text
-{st.session_state.custom_a_text}
-```")
+                    st.markdown(f"```text\n{st.session_state.custom_a_text}\n```")
                 st.write("---")
-                st.download_button("📥 Download Answer Key (.txt)", data=st.session_state.custom_a_text, file_name=f"Custom_Ans_Key_{selected_subject}.txt", mime="text/plain", type="primary", use_container_width=True)
+                st.download_button("📥 Download Answer Key (.pdf)", data=st.session_state.custom_a_text, file_name=f"Custom_Ans_Key_{selected_subject}.txt", mime="text/plain", type="primary", use_container_width=True)
                 
                 st.write("---")
-                if st.button("🤖 Generate AI Solution for Custom Paper", type="secondary", key="ai_custom"):
-                    with st.spinner("⏳ Gemini AI is solving the custom paper..."):
+                if st.button("🤖 Generate Solution for Custom Paper", type="secondary", key="ai_custom"):
+                    with st.spinner("⏳ Generating Solution..."):
                         try:
                             model = genai.GenerativeModel('gemini-3.5-flash')
-                            prompt = f"Solve this complete commerce question paper step-by-step with accounting formats, adjustments, and explanations for a teacher's answer key:
-
-{st.session_state.custom_p_text}"
+                            prompt = f"Solve this complete commerce question paper step-by-step with accounting formats, adjustments, and explanations for a teacher's answer key:\n\n{st.session_state.custom_p_text}"
                             response = model.generate_content(prompt, stream=True, request_options={"timeout": 600})
                             res_box = st.empty()
                             full_text = ""
