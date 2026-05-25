@@ -58,8 +58,6 @@ def show_admin_panel():
     except Exception:
         pass
     
-    st.write("---")
-    
     qna_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
     obj_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
     
@@ -136,8 +134,7 @@ def show_admin_panel():
 
         all_chaps = sorted(list(set(qna_df[qna_df['Subject'] == board_sub]['Chapter_Name'].unique()).union(set(obj_df[obj_df['Subject'] == board_sub]['Chapter_Name'].unique()))))
         
-        st.write("---")
-        
+              
         if board_sub.strip().upper() in ['BK', 'BOOK KEEPING', 'BOOK-KEEPING', 'BOOK KEEPING & ACCOUNTANCY']:
             st.markdown(f"#### ⚙️ 2. Chapter Assignments (BK Pattern)")
             st.info("Q.1 Objective Questions (15 Marks) will be drawn randomly from the entire syllabus.")
