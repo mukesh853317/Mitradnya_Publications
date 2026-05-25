@@ -99,7 +99,7 @@ def show_student_dashboard():
     # ==========================================
     with main_tabs[0]:
         categories = ["IMP_Proforma", "Short_Notes", "Exercise_Problems", "Extra_Practical"]
-        sub_tab_names = ["📑 IMP Proforma & Journal Entries", "📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
+        sub_tab_names = ["📑 IMP Proforma & Journal Entries", "📖 Short Notes & One Sentence", "📝 Exercise Problems", "📊 Extra Practical"]
         sub_tabs = st.tabs(sub_tab_names)
 
         for i in range(len(categories)):
