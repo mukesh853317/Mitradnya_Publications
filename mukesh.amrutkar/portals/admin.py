@@ -5,8 +5,8 @@ import google.generativeai as genai
 import datetime
 
 def show_admin_panel():
-    st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - Advanced Paper Generator</h2>", unsafe_allow_html=True)
-    st.info("💡 Create Custom Practice Papers or Strict Board Pattern Papers easily!")
+    st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - Advanced Board Paper Generator</h2>", unsafe_allow_html=True)
+    st.info("💡 Create question papers with Board Pattern Marks, Date, and Branch. You can also edit the generated paper online before downloading!")
     
     # AI Setup
     try:
@@ -48,161 +48,160 @@ def show_admin_panel():
     obj_df['Chapter_Name'] = obj_df['Chapter_Name'].astype(str).str.strip()
 
     all_subjects = list(set(qna_df['Subject'].unique()).union(set(obj_df['Subject'].unique())))
-
-    # ---------------------------------------------------------
-    # MAIN TABS: CUSTOM PAPER vs BOARD PAPER
-    # ---------------------------------------------------------
-    paper_tabs = st.tabs(["📝 Custom Practice Paper", "🏛️ Strict Board Paper (80 Marks)"])
     
-    # =========================================================
-    # TAB 1: CUSTOM PRACTICE PAPER (No strictness, fully flexible)
-    # =========================================================
-    with paper_tabs[0]:
-        st.markdown("#### ⚙️ 1. Header & Flexibility Settings")
-        col_h1, col_h2, col_h3 = st.columns(3)
-        with col_h1:
-            selected_subject = st.selectbox("📚 Select Subject:", all_subjects, key="custom_sub_select")
-        with col_h2:
-            branch_name = st.text_input("🏢 Enter Branch Name:", value="Ambernath", key="custom_branch")
-        with col_h3:
-            exam_date = st.date_input("🗓️ Select Exam Date:", datetime.date.today(), key="custom_date")
-            
-        chap_qna = qna_df[qna_df['Subject'] == selected_subject]['Chapter_Name'].unique().tolist()
-        chap_obj = obj_df[obj_df['Subject'] == selected_subject]['Chapter_Name'].unique().tolist()
-        all_chapters = list(set(chap_qna).union(set(chap_obj)))
-        all_chapters.sort()
+    # 2. Header and Pattern Settings UI
+    st.markdown("#### 📝 1. Header Information")
+    col_h1, col_h2, col_h3 = st.columns(3)
+    with col_h1:
+        selected_subject = st.selectbox("📚 Select Subject:", all_subjects, key="admin_sub_select")
+    with col_h2:
+        branch_name = st.text_input("🏢 Enter Branch Name:", value="Ambernath")
+    with col_h3:
+        exam_date = st.date_input("🗓️ Select Exam Date:", datetime.date.today())
         
-        selected_chapters = st.multiselect("📑 Select Chapters for Test:", all_chapters, default=all_chapters[:1] if all_chapters else None, key="custom_chaps")
+    chap_qna = qna_df[qna_df['Subject'] == selected_subject]['Chapter_Name'].unique().tolist()
+    chap_obj = obj_df[obj_df['Subject'] == selected_subject]['Chapter_Name'].unique().tolist()
+    all_chapters = list(set(chap_qna).union(set(chap_obj)))
+    all_chapters.sort()
+    
+    selected_chapters = st.multiselect("📑 Select Chapters for Test:", all_chapters, default=all_chapters[:1] if all_chapters else None)
 
-        st.markdown("#### 🎯 2. Paper Pattern & Marks")
-        col_p1, col_p2, col_p3 = st.columns(3)
-        with col_p1:
-            num_mcq = st.number_input("Number of MCQs:", min_value=0, max_value=50, value=10, step=1, key="custom_mcq_num")
-            mcq_marks = st.number_input("Marks per MCQ:", min_value=1, max_value=5, value=1, step=1, key="custom_mcq_mk")
-        with col_p2:
-            num_theory = st.number_input("Number of Practical/Theory Qs:", min_value=0, max_value=20, value=2, step=1, key="custom_th_num")
-            theory_marks = st.number_input("Marks per Practical Q:", min_value=1, max_value=20, value=15, step=1, key="custom_th_mk")
-        with col_p3:
-            total_time = st.text_input("Exam Duration (Time):", value="2 Hours", key="custom_time")
-            calculated_total = (num_mcq * mcq_marks) + (num_theory * theory_marks)
-            st.markdown(f"<br><h4 style='color: #166534;'>Total Marks: {calculated_total}</h4>", unsafe_allow_html=True)
-            
-        st.write("---")
+    st.markdown("#### ⚙️ 2. Board Paper Pattern & Marks Settings")
+    col_p1, col_p2, col_p3 = st.columns(3)
+    with col_p1:
+        num_mcq = st.number_input("Number of MCQs:", min_value=0, max_value=50, value=10, step=1)
+        mcq_marks = st.number_input("Marks per MCQ:", min_value=1, max_value=5, value=1, step=1)
+    with col_p2:
+        num_theory = st.number_input("Number of Practical/Theory Qs:", min_value=0, max_value=20, value=2, step=1)
+        theory_marks = st.number_input("Marks per Practical Q:", min_value=1, max_value=20, value=15, step=1)
+    with col_p3:
+        total_time = st.text_input("Exam Duration (Time):", value="2 Hours")
+        calculated_total = (num_mcq * mcq_marks) + (num_theory * theory_marks)
+        st.markdown(f"<br><h4 style='color: #166534;'>Total Marks: {calculated_total}</h4>", unsafe_allow_html=True)
         
-        if 'custom_paper_generated' not in st.session_state:
-            st.session_state.custom_paper_generated = False
-            st.session_state.custom_p_text = ""
-            st.session_state.custom_a_text = ""
+    st.write("---")
+    
+    if 'admin_paper_generated' not in st.session_state:
+        st.session_state.admin_paper_generated = False
+        st.session_state.paper_raw_text = ""
+        st.session_state.ans_raw_text = ""
 
-        if st.button("🚀 Generate Custom Paper", type="primary", key="gen_custom_btn"):
-            if not selected_chapters:
-                st.warning("⚠️ Please select at least one chapter!")
+    if st.button("🚀 Generate Board Question Paper", type="primary", key="gen_board_paper_btn"):
+        if not selected_chapters:
+            st.warning("⚠️ Please select at least one chapter!")
+            return
+            
+        with st.spinner("⏳ Generating Board Pattern Paper..."):
+            filtered_obj = obj_df[(obj_df['Subject'] == selected_subject) & (obj_df['Chapter_Name'].isin(selected_chapters))]
+            if not filtered_obj.empty:
+                take_mcq = min(num_mcq, len(filtered_obj))
+                final_mcqs = filtered_obj.sample(n=take_mcq).reset_index(drop=True)
             else:
-                with st.spinner("⏳ Generating Flexible Custom Paper..."):
-                    filtered_obj = obj_df[(obj_df['Subject'] == selected_subject) & (obj_df['Chapter_Name'].isin(selected_chapters))]
-                    if not filtered_obj.empty:
-                        take_mcq = min(num_mcq, len(filtered_obj))
-                        final_mcqs = filtered_obj.sample(n=take_mcq).reset_index(drop=True)
-                    else:
-                        final_mcqs = pd.DataFrame()
-                        
-                    main_qna = qna_df[qna_df['is_main_question'] == True]
-                    filtered_qna = main_qna[(main_qna['Subject'] == selected_subject) & (main_qna['Chapter_Name'].isin(selected_chapters)) & (main_qna['Category'] != 'IMP_Proforma')]
-                    
-                    if not filtered_qna.empty:
-                        take_theory = min(num_theory, len(filtered_qna))
-                        final_theory = filtered_qna.sample(n=take_theory).reset_index(drop=True)
-                    else:
-                        final_theory = pd.DataFrame()
-
-                    formatted_date = exam_date.strftime('%d-%m-%Y')
-                    
-                    p_text = f"========================================\n"
-                    p_text += f"        MITRADNYA PUBLICATION'S\n"
-                    p_text += f"========================================\n"
-                    p_text += f"Branch: {branch_name}          Date: {formatted_date}\n"
-                    p_text += f"Subject: {selected_subject}             Time: {total_time}\n"
-                    p_text += f"Total Marks: {calculated_total} Marks\n"
-                    p_text += f"Chapters: {', '.join(selected_chapters)}\n"
-                    p_text += f"----------------------------------------\n\n"
-                    
-                    if not final_mcqs.empty:
-                        p_text += f"Q.1 Choose the correct alternative and rewrite the sentence. [Marks: {num_mcq * mcq_marks}]\n\n"
-                        for idx, row in final_mcqs.iterrows():
-                            p_text += f"({idx+1}) {row['Question']}\n"
-                            p_text += f"    A) {row['Option A']}   B) {row['Option B']}   C) {row['Option C']}   D) {row['Option D']}\n\n"
-                    
-                    if not final_theory.empty:
-                        p_text += f"Q.2 Solve the following Practical / Theory problems. [Marks: {num_theory * theory_marks} (Each carries {theory_marks} Marks)]\n\n"
-                        for idx, row in final_theory.iterrows():
-                            q_id = row['Question_ID']
-                            group = qna_df[qna_df['Question_ID'] == q_id]
-                            full_q_text = "\n".join([str(r.get('Question_Text', '')).strip() for _, r in group.iterrows() if str(r.get('Question_Text', '')).strip() != 'nan'])
-                            p_text += f"({idx+1}) {full_q_text}\n"
-                            p_text += f"----------------------------------------\n\n"
-
-                    a_text = f"========================================\n"
-                    a_text += f"   MITRADNYA PUBLICATION'S - ANSWER KEY\n"
-                    a_text += f"========================================\n"
-                    a_text += f"Subject: {selected_subject} | Date: {formatted_date}\n\n"
-                    
-                    if not final_mcqs.empty:
-                        a_text += f"--- Q.1 MCQ ANSWERS ---\n"
-                        for idx, row in final_mcqs.iterrows():
-                            a_text += f"{idx+1}. Correct Answer: {row['Correct Answer (Full Text)']}\n"
-                        a_text += f"\n"
-                    
-                    if not final_theory.empty:
-                        a_text += f"--- Q.2 PRACTICAL SOLUTIONS ---\n"
-                        for idx, row in final_theory.iterrows():
-                            a_text += f"Question {idx+1} Solution Hint: Refer to Solutions or textbook answers.\n\n"
-
-                    st.session_state.custom_p_text = p_text
-                    st.session_state.custom_a_text = a_text
-                    st.session_state.custom_paper_generated = True
-                    st.rerun()
-
-        # PREVIEW AND DOWNLOAD
-        if st.session_state.custom_paper_generated:
-            st.markdown("### 🖨️ Print Preview & Download (Custom Paper)")
-            out_tabs = st.tabs(["📄 Question Paper Preview", "📝 Answer Key & AI Solutions"])
-            
-            with out_tabs[0]:
-                st.success("✅ Custom Paper generated successfully!")
-                with st.container(border=True):
-                    st.markdown(f"```text\n{st.session_state.custom_p_text}\n```")
-                st.write("---")
-                st.download_button("📥 Download Custom Paper (.pdf)", data=st.session_state.custom_p_text, file_name=f"Custom_Paper_{selected_subject}.txt", mime="text/plain", type="primary", use_container_width=True)
-
-            with out_tabs[1]:
-                with st.container(border=True):
-                    st.markdown(f"```text\n{st.session_state.custom_a_text}\n```")
-                st.write("---")
-                st.download_button("📥 Download Answer Key (.pdf)", data=st.session_state.custom_a_text, file_name=f"Custom_Ans_Key_{selected_subject}.txt", mime="text/plain", type="primary", use_container_width=True)
+                final_mcqs = pd.DataFrame()
                 
-                st.write("---")
-                if st.button("🤖 Generate Solution for Custom Paper", type="secondary", key="ai_custom"):
-                    with st.spinner("⏳ Generating Solution..."):
-                        try:
-                            model = genai.GenerativeModel('gemini-3.5-flash')
-                            prompt = f"Solve this complete commerce question paper step-by-step with accounting formats, adjustments, and explanations for a teacher's answer key:\n\n{st.session_state.custom_p_text}"
-                            response = model.generate_content(prompt, stream=True, request_options={"timeout": 600})
-                            res_box = st.empty()
-                            full_text = ""
-                            for chunk in response:
-                                full_text += chunk.text
-                                res_box.markdown(full_text + " ▌")
-                            res_box.markdown(full_text)
-                        except Exception as e:
-                            st.error(f"AI Error: {e}")
+            main_qna = qna_df[qna_df['is_main_question'] == True]
+            filtered_qna = main_qna[(main_qna['Subject'] == selected_subject) & (main_qna['Chapter_Name'].isin(selected_chapters)) & (main_qna['Category'] != 'IMP_Proforma')]
+            
+            if not filtered_qna.empty:
+                take_theory = min(num_theory, len(filtered_qna))
+                final_theory = filtered_qna.sample(n=take_theory).reset_index(drop=True)
+            else:
+                final_theory = pd.DataFrame()
 
-    # =========================================================
-    # TAB 2: STRICT BOARD PAPER (80 Marks Layout Example)
-    # =========================================================
-    with paper_tabs[1]:
-        st.markdown("#### 🏛️ Board Exam 80-Marks Auto Builder")
-        st.info("💡 Coming soon: A highly structured 80-marks compiler strictly following the Maharashtra State Board layout (e.g., Q.1 Objective, Q.2 Admission/Retirement, Q.7 Final Accounts).")
-        st.write("This tab will allow you to assign specific chapters to specific Question numbers as per board weightage.")
+            formatted_date = exam_date.strftime('%d-%m-%Y')
+            
+            p_text = f"========================================\n"
+            p_text += f"        MITRADNYA PUBLICATIONS\n"
+            p_text += f"========================================\n"
+            p_text += f"Branch: {branch_name}          Date: {formatted_date}\n"
+            p_text += f"Subject: {selected_subject}             Time: {total_time}\n"
+            p_text += f"Total Marks: {calculated_total} Marks\n"
+            p_text += f"Chapters: {', '.join(selected_chapters)}\n"
+            p_text += f"----------------------------------------\n\n"
+            
+            if not final_mcqs.empty:
+                p_text += f"Q.1 Choose the correct alternative and rewrite the sentence. [Marks: {num_mcq * mcq_marks}]\n\n"
+                for idx, row in final_mcqs.iterrows():
+                    p_text += f"({idx+1}) {row['Question']}\n"
+                    p_text += f"    A) {row['Option A']}   B) {row['Option B']}   C) {row['Option C']}   D) {row['Option D']}\n\n"
+            
+            if not final_theory.empty:
+                p_text += f"Q.2 Solve the following Practical / Theory problems. [Marks: {num_theory * theory_marks} (Each carries {theory_marks} Marks)]\n\n"
+                for idx, row in final_theory.iterrows():
+                    q_id = row['Question_ID']
+                    group = qna_df[qna_df['Question_ID'] == q_id]
+                    full_q_text = "\n".join([str(r.get('Question_Text', '')).strip() for _, r in group.iterrows() if str(r.get('Question_Text', '')).strip() != 'nan'])
+                    p_text += f"({idx+1}) {full_q_text}\n"
+                    p_text += f"----------------------------------------\n\n"
+
+            a_text = f"========================================\n"
+            a_text += f"    MITRADNYA PUBLICATIONS - ANSWER KEY\n"
+            a_text += f"========================================\n"
+            a_text += f"Subject: {selected_subject} | Date: {formatted_date}\n\n"
+            
+            if not final_mcqs.empty:
+                a_text += f"--- Q.1 MCQ ANSWERS ---\n"
+                for idx, row in final_mcqs.iterrows():
+                    a_text += f"{idx+1}. Correct Answer: {row['Correct Answer (Full Text)']}\n"
+                a_text += f"\n"
+            
+            if not final_theory.empty:
+                a_text += f"--- Q.2 PRACTICAL SOLUTIONS ---\n"
+                for idx, row in final_theory.iterrows():
+                    a_text += f"Question {idx+1} Solution Hint: Refer to AI Solutions or textbook answers.\n\n"
+
+            st.session_state.paper_raw_text = p_text
+            st.session_state.ans_raw_text = a_text
+            st.session_state.admin_paper_generated = True
+            st.rerun()
+
+    if st.session_state.admin_paper_generated:
+        st.markdown("### 🛠️ 3. Edit & Download Section")
         
-        # Placeholder for future development
-        st.button("Build Strict Board Pattern (Beta)", disabled=True)
+        out_tabs = st.tabs(["📄 Question Paper Portal", "📝 Answer Key Portal"])
+        
+        with out_tabs[0]:
+            st.success("✅ Board Question Paper generated!")
+           
+            st.download_button(
+                label="📥 Download Edited Question Paper (.pdf)",
+                data=edited_paper,
+                file_name=f"{selected_subject}_Board_Exam_Paper.pdf",
+                mime="text/plain",
+                type="primary",
+                key="dl_edited_paper_btn"
+            )
+            st.info("💡 Tip: You can edit or add anything in the box above. The downloaded file will include all your changes!")
+
+        with out_tabs[1]:
+            st.markdown("#### 📝 Answer Key")
+            
+            st.download_button(
+                label="📥 Download Edited Answer Key (.pdf)",
+                data=edited_ans,
+                file_name=f"{selected_subject}_Answer_Key.pdf",
+                mime="text/plain",
+                type="primary",
+                key="dl_edited_ans_btn"
+            )
+            
+            st.write("---")
+            st.markdown("#### 🧠 Generate Solutions for Paper Reference:")
+            st.info("Use the button below to generate a reference answer key for teachers.")
+            
+            if st.button("🤖 Generate Full Paper Solution", type="secondary"):
+                with st.spinner("⏳ Generating Full Paper Solution..."):
+                    try:
+                        model = genai.GenerativeModel('gemini-3.5-flash')
+                        prompt = f"Solve this complete commerce question paper step-by-step with accounting formats, adjustments, and explanations for a teacher's answer key:\n\n{st.session_state.paper_raw_text}"
+                        response = model.generate_content(prompt, stream=True, request_options={"timeout": 600})
+                        
+                        st.markdown("### 📝 Generated Model Solution:")
+                        res_box = st.empty()
+                        full_text = ""
+                        for chunk in response:
+                            full_text += chunk.text
+                            res_box.markdown(full_text + " ▌")
+                        res_box.markdown(full_text)
+                    except Exception as e:
+                        st.error(f"AI Error: {e}")
