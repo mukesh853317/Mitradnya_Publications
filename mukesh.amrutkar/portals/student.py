@@ -83,7 +83,6 @@ def show_student_dashboard():
         chapter_list = all_chapters_df[all_chapters_df['Subject'].astype(str) == str(selected_subject)]['Chapter_Name'].dropna().astype(str).unique().tolist()
         selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
         
-   
     df_filtered = df[(df['Subject'].astype(str).str.strip() == str(selected_subject).strip()) & 
                      (df['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip())]
 
@@ -100,10 +99,9 @@ def show_student_dashboard():
     # ==========================================
     with main_tabs[0]:
         categories = ["IMP_Proforma", "Short_Notes", "Exercise_Problems", "Extra_Practical"]
-        sub_tab_names = ["📑 IMP Proforma", "📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
+        sub_tab_names = ["📑 IMP Proforma & Journal Entries", "📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
         sub_tabs = st.tabs(sub_tab_names)
 
-        # 🔴 बदल: range(3) ऐवजी len(categories) वापरले आहे, ज्यामुळे ४था टॅब पण लोड होईल.
         for i in range(len(categories)):
             with sub_tabs[i]:
                 cat_name = categories[i]
@@ -120,7 +118,7 @@ def show_student_dashboard():
                     main_title = str(first_row.get('Question_Text', ''))
                     display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
                     
-                    with st.expander(f" Q. {q_idx + 1}: {display_title}"):
+                    with st.expander(f" {display_title}"): # Removed Q. Prefix for cleaner look, optional based on choice
                         table_data = []
                         answer_text = ""
                         
@@ -168,30 +166,32 @@ def show_student_dashboard():
                         
                         st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
                         
-                        if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
-                            if answer_text:
-                                st.info(f"💡 **Hint:** {answer_text}")
-                                
-                            with st.spinner("⏳ Generating Solutions..."):
-                                try:
-                                    model = genai.GenerativeModel('gemini-3.5-flash') 
-                                    response = model.generate_content(
-                                        f"Solve this accountancy problem in detail step-by-step:\n\n{q_text}", 
-                                        stream=True,
-                                        request_options={"timeout": 600}
-                                    )
-                                    st.markdown("### 📝 Generated Solution:")
-                                    res_box = st.empty()
-                                    full_text = ""
-                                    for chunk in response:
-                                        full_text += chunk.text
-                                        res_box.markdown(full_text + " ▌")
-                                    res_box.markdown(full_text)
-                                except Exception as e:
-                                    st.error(f"AI Error: {e}")
+                        # 🔴 फक्त IMP_Proforma सोडून इतर सर्व टॅबला Solution बटण दाखवा
+                        if cat_name != "IMP_Proforma":
+                            if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
+                                if answer_text:
+                                    st.info(f"💡 **Hint:** {answer_text}")
+                                    
+                                with st.spinner("⏳ Generating Solutions..."):
+                                    try:
+                                        model = genai.GenerativeModel('gemini-3.5-flash') 
+                                        response = model.generate_content(
+                                            f"Solve this accountancy problem in detail step-by-step:\n\n{q_text}", 
+                                            stream=True,
+                                            request_options={"timeout": 600}
+                                        )
+                                        st.markdown("### 📝 Generated Solution:")
+                                        res_box = st.empty()
+                                        full_text = ""
+                                        for chunk in response:
+                                            full_text += chunk.text
+                                            res_box.markdown(full_text + " ▌")
+                                        res_box.markdown(full_text)
+                                    except Exception as e:
+                                        st.error(f"AI Error: {e}")
 
     # ==========================================
-    # २. Board Papers & Solutions (प्रीमियम कॉम्बो: Download + Online AI Solutions)
+    # २. Board Papers & Solutions 
     # ==========================================
     with main_tabs[1]:
         st.markdown(f"<h3 style='color: #1e3a8a;'>📄 Board Question Papers & Solutions ({selected_subject})</h3>", unsafe_allow_html=True)
@@ -222,8 +222,7 @@ def show_student_dashboard():
                         key=f"dl_btn_{selected_year}"
                     )
                 
-                                
-                # निवडलेल्या वर्षाचे सर्व प्रश्न खाली Expanders मध्ये दाखवणे
+                 
                 bp_filtered = bp_df_sub[bp_df_sub['Year'].astype(str).str.strip() == str(selected_year).strip()]
                 
                 for idx, row in bp_filtered.iterrows():
@@ -257,7 +256,7 @@ def show_student_dashboard():
                                 except Exception as e:
                                     st.error(f"AI Error: {e}")
             else:
-                st.info(f"💡 No Board Papers found for {selected_subject} yet.")
+                st.info(f"💡 No board papers found for {selected_subject} yet.")
         else:
             col1, col2 = st.columns([2, 1])
             with col1:
