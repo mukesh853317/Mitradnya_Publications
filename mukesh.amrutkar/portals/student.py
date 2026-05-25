@@ -83,6 +83,7 @@ def show_student_dashboard():
         chapter_list = all_chapters_df[all_chapters_df['Subject'].astype(str) == str(selected_subject)]['Chapter_Name'].dropna().astype(str).unique().tolist()
         selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
         
+   
     df_filtered = df[(df['Subject'].astype(str).str.strip() == str(selected_subject).strip()) & 
                      (df['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip())]
 
@@ -102,7 +103,8 @@ def show_student_dashboard():
         sub_tab_names = ["📑 IMP Proforma", "📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
         sub_tabs = st.tabs(sub_tab_names)
 
-        for i in range(3):
+        # 🔴 बदल: range(3) ऐवजी len(categories) वापरले आहे, ज्यामुळे ४था टॅब पण लोड होईल.
+        for i in range(len(categories)):
             with sub_tabs[i]:
                 cat_name = categories[i]
                 cat_df = df_filtered[df_filtered['Category'].astype(str).str.strip() == cat_name]
@@ -189,7 +191,7 @@ def show_student_dashboard():
                                     st.error(f"AI Error: {e}")
 
     # ==========================================
-    # 🔴 २. Board Papers & Solutions (प्रीमियम कॉम्बो: Download + Online AI Solutions)
+    # २. Board Papers & Solutions (प्रीमियम कॉम्बो: Download + Online AI Solutions)
     # ==========================================
     with main_tabs[1]:
         st.markdown(f"<h3 style='color: #1e3a8a;'>📄 Board Question Papers & Solutions ({selected_subject})</h3>", unsafe_allow_html=True)
@@ -220,8 +222,8 @@ def show_student_dashboard():
                         key=f"dl_btn_{selected_year}"
                     )
                 
-                         
-                # निवडलेल्या वर्षाचे सर्व प्रश्न खाली Expanders मध्ये दाखवणे (AI सोल्युशन बटनसह)
+                                
+                # निवडलेल्या वर्षाचे सर्व प्रश्न खाली Expanders मध्ये दाखवणे
                 bp_filtered = bp_df_sub[bp_df_sub['Year'].astype(str).str.strip() == str(selected_year).strip()]
                 
                 for idx, row in bp_filtered.iterrows():
@@ -255,9 +257,8 @@ def show_student_dashboard():
                                 except Exception as e:
                                     st.error(f"AI Error: {e}")
             else:
-                st.info(f"💡 No board papers found for {selected_subject} yet.")
+                st.info(f"💡 No Board Papers found for {selected_subject} yet.")
         else:
-            # जर फाईल नसेल तरी डाऊनलोड बटन आणि मेसेज एकत्र दाखवणे
             col1, col2 = st.columns([2, 1])
             with col1:
                 paper_year = st.selectbox("🗓️ Select Exam Year / Exam Paper:", ["March 2024", "July 2023", "March 2023", "March 2022"])
