@@ -7,19 +7,22 @@ def load_objective_test(selected_chapter):
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
 
     if not os.path.exists(csv_path):
-        st.warning("⏳ Objective Questions for this chapter will be updated soon! (Stay Tuned)")
+        st.warning("⏳ Objective Questions will be updated soon! (Stay Tuned)")
         return
 
     df = pd.read_csv(csv_path)
     
-    df_filtered = df[df['No'].astype(str).str.strip() == str(selected_chapter)].reset_index(drop=True)
+    df_filtered = df[df['No'].astype(str).str.strip() == str(selected_chapter).strip()].reset_index(drop=True)
 
     if df_filtered.empty:
-        st.info(f"💡 Objective test for {selected_chapter} is not available yet.")
+        st.info(f"💡 Objective test for '{selected_chapter}' is not available yet.")
         return
 
     total_questions = len(df_filtered)
     questions_per_set = 20
+
+    # 🔴 टायटल आधी दाखवा, मग ड्रॉपडाऊन (ज्यामुळे ती रिकामी स्पेस निघून जाईल)
+    st.markdown(f"<h3 style='color: #1e3a8a; margin-top: 0;'>🎯 MCQ Practice Test</h3>", unsafe_allow_html=True)
 
     if total_questions > questions_per_set:
         num_sets = math.ceil(total_questions / questions_per_set)
@@ -38,10 +41,11 @@ def load_objective_test(selected_chapter):
         df_to_display = df_filtered.iloc[start_idx:end_idx].reset_index(drop=True)
     else:
         df_to_display = df_filtered
+        set_idx = 0
 
-    st.markdown(f"<h3 style='color: #1e3a8a;'>🎯 MCQ Practice Test - {selected_chapter}</h3>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 5px 0 15px 0;'>", unsafe_allow_html=True)
     
-    with st.form(key=f"quiz_form_{selected_chapter}_{set_idx if total_questions > questions_per_set else 0}"):
+    with st.form(key=f"quiz_form_{selected_chapter}_{set_idx}"):
         user_answers = {}
         
         for idx, row in df_to_display.iterrows():
@@ -58,7 +62,7 @@ def load_objective_test(selected_chapter):
                 key=f"q_{selected_chapter}_{actual_q_no}", 
                 index=None
             )
-            st.markdown("<hr style='margin: 15px 0; border-top: 1px dashed #ddd;'>", unsafe_allow_html=True)
+            st.markdown("<hr style='margin: 10px 0; border-top: 1px dashed #eee;'>", unsafe_allow_html=True)
             
         submit_btn = st.form_submit_button("✅ Submit Test", type="primary")
         
