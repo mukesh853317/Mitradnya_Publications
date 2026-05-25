@@ -22,8 +22,9 @@ def show_student_dashboard():
     if 'design_utils' in globals() and hasattr(design_utils, 'apply_premium_design'):
         design_utils.apply_premium_design()
 
-    st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
+    st.subheader("🎓 Student's Dashboard - Mitradnya Publication's 🎓")
     
+    # 🔴 API Key एकदाच सेट करा 
     try:
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
@@ -44,25 +45,36 @@ def show_student_dashboard():
     df['is_main_question'] = df['Chapter_Name'].notna() & (df['Chapter_Name'].astype(str).str.strip() != '')
     df['Question_ID'] = df['is_main_question'].cumsum()
 
+    # जर CSV मध्ये Subject कॉलम नसेल, तर तात्पुरता 'BK' म्हणून सेट करू जेणेकरून कोड क्रॅश होणार नाही
+    if 'Subject' not in df.columns:
+        df['Subject'] = 'BK'
+
+    df['Subject'] = df['Subject'].ffill()
     df['Chapter_Name'] = df['Chapter_Name'].ffill()
     df['Category'] = df['Category'].ffill()
 
     # ==============================================================
-    # 🔴 सर्वात मोठा बदल: 'Global Chapter Selector' (सर्वांत वर)
+    # 🔴 २ स्तरांचे ग्लोबल फिल्टर (Subject -> Chapter)
     # ==============================================================
-    st.markdown("<h4 style='color: #4b5563; margin-bottom: 5px;'>📚 Select Subject / Chapter:</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='color: #4b5563; margin-bottom: 5px;'>📚 Select Subject & Chapter 📚:</h4>", unsafe_allow_html=True)
     
-    # QnA मधून युनिक चॅप्टर्सची लिस्ट काढा
-    chapter_list = df['Chapter_Name'].dropna().astype(str).unique().tolist()
+    col_sub, col_chap = st.columns(2)
     
-    if not chapter_list:
-        st.warning("No chapters found in data.")
-        return
+    with col_sub:
+        # १. विषय निवडण्यासाठी ड्रॉपडाऊन (BK, Eco, OCM, SP)
+        subject_list = df['Subject'].dropna().astype(str).unique().tolist()
+        selected_subject = st.selectbox("Select Subject", subject_list, key="global_subject_select")
         
-    selected_chapter = st.selectbox("Choose Chapter", chapter_list, label_visibility="collapsed")
-  
-    # 🔴 निवडलेल्या चॅप्टरनुसार संपूर्ण डेटा फिल्टर करा
-    df_filtered = df[df['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip()]
+    # निवडलेल्या विषयानुसार डेटा फिल्टर करा
+    df_subject = df[df['Subject'].astype(str).str.strip() == str(selected_subject).strip()]
+    
+    with col_chap:
+        # २. निवडलेल्या विषयाच्या अंतर्गत येणारे चॅप्टर्स दाखवणे
+        chapter_list = df_subject['Chapter_Name'].dropna().astype(str).unique().tolist()
+        selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
+        
+    # 🔴 निवडलेल्या चॅप्टर आणि सब्जेक्टनुसार फायनल डेटा फिल्टर
+    df_filtered = df_subject[df_subject['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip()]
 
     # मुख्य ४ टॅब्स 
     main_tab_names = [
@@ -77,8 +89,6 @@ def show_student_dashboard():
     # 🔴 १. Study Room (यात पहिले ३ टॅब्स येतील)
     # ==========================================
     with main_tabs[0]:
-        
-        # इथे आपण 'Sub-tabs' (उपटॅब्स) बनवले आहेत
         categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
         sub_tab_names = ["📖 Short Notes", "📝 Exercise Problems", "📊 Extra Practical"]
         sub_tabs = st.tabs(sub_tab_names)
@@ -86,7 +96,6 @@ def show_student_dashboard():
         for i in range(3):
             with sub_tabs[i]:
                 cat_name = categories[i]
-                # इथे आपण df ऐवजी df_filtered वापरला आहे
                 cat_df = df_filtered[df_filtered['Category'].astype(str).str.strip() == cat_name]
                 
                 if cat_df.empty:
@@ -122,7 +131,7 @@ def show_student_dashboard():
                                         html_table += "<tr>"
                                         for col in t_row:
                                             if r_idx == 0:
-                                                html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
+                                                html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                             else:
                                                 html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                         html_table += "</tr>"
@@ -139,7 +148,7 @@ def show_student_dashboard():
                                 html_table += "<tr>"
                                 for col in t_row:
                                     if r_idx == 0:
-                                        html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
+                                        html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
                                     else:
                                         html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                 html_table += "</tr>"
@@ -178,8 +187,8 @@ def show_student_dashboard():
     # 🔴 २. Board Papers & Solutions
     # ==========================================
     with main_tabs[1]:
-        st.markdown(f"<h3 style='color: #1e3a8a;'>📄 Board Question Papers</h3>", unsafe_allow_html=True)
-        st.info("💡 Previous years' board question papers and their detailed solutions will be available here soon.")
+        st.markdown(f"<h3 style='color: #1e3a8a;'>📄 Board Question Papers ({selected_subject})</h3>", unsafe_allow_html=True)
+        st.info(f"💡 Previous years' board question papers for {selected_subject} will be available here soon.")
         
         col1, col2 = st.columns([2, 1])
         with col1:
@@ -193,7 +202,9 @@ def show_student_dashboard():
     # ==========================================
     with main_tabs[2]:
         if 'quiz_manager' in globals() and hasattr(quiz_manager, 'load_objective_test'):
-            # 🔴 आता आपल्याला इथे परत चॅप्टर सिलेक्ट करायची गरज नाही, वरचाच 'selected_chapter' वापरला आहे
+            # 🔴 आपण quiz_manager ला 'selected_chapter' पास करत आहोत. 
+            # जर Objectives.csv मध्ये चॅप्टरचे नाव युनिक असेल (उदा. BK_Chapter_1, Eco_Chapter_1) तर ते अधिक सोपे होईल, 
+            # किंवा थेट चॅप्टरच्या नावाने मॅच होईल.
             quiz_manager.load_objective_test(selected_chapter)
         else:
              st.error("⚠️ quiz_manager.py file not found in utils folder.")
