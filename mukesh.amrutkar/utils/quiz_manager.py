@@ -13,10 +13,15 @@ def load_objective_test(selected_subject, selected_chapter):
 
     df = pd.read_csv(csv_path)
     
-    df_filtered = df[df['No'].astype(str).str.strip() == str(selected_chapter).strip()].reset_index(drop=True)
+    # जर Objectives.csv मध्ये Subject कॉलम नसेल तर क्रॅश होऊ नये म्हणून 
+    if 'Subject' not in df.columns:
+        df['Subject'] = 'BK'
+        
+    df_filtered = df[(df['Subject'].astype(str).str.strip() == str(selected_subject).strip()) & 
+                     (df['No'].astype(str).str.strip() == str(selected_chapter).strip())].reset_index(drop=True)
 
     if df_filtered.empty:
-        st.info(f"💡 Objective test for '{selected_chapter}' is not available yet.")
+        st.info(f"💡 Objective test for '{selected_chapter}' in '{selected_subject}' is not available yet.")
         return
 
     total_questions = len(df_filtered)
@@ -35,6 +40,7 @@ def load_objective_test(selected_subject, selected_chapter):
         
         selected_set_str = st.selectbox("🎯 Choose Test Set:", set_options)
         set_idx = set_options.index(selected_set_str)
+        test_name = f"Test Set {set_idx + 1}"
         
         start_idx = set_idx * questions_per_set
         end_idx = min(start_idx + questions_per_set, total_questions)
@@ -42,10 +48,21 @@ def load_objective_test(selected_subject, selected_chapter):
     else:
         df_to_display = df_filtered
         set_idx = 0
+        test_name = "Full Chapter Test"
 
     st.markdown("<hr style='margin: 5px 0 15px 0;'>", unsafe_allow_html=True)
     
-    with st.form(key=f"quiz_form_{selected_chapter}_{set_idx}"):
+    # 🔴 टेस्ट Clear/Reset करण्यासाठी Session State चा वापर
+    reset_key = f"reset_counter_{selected_subject}_{selected_chapter}_{set_idx}"
+    if reset_key not in st.session_state:
+        st.session_state[reset_key] = 0
+
+    # form_key मध्ये reset_key दिल्याने टेस्ट पूर्णपणे रिफ्रेश होते
+    form_key = f"quiz_form_{selected_chapter}_{set_idx}_{st.session_state[reset_key]}"
+    
+    with st.form(key=form_key):
+        # 🔴 टेस्टचा नंबर / नाव दाखवणे
+        st.markdown(f"**📋 Currently Attempting: {test_name}**")
         user_answers = {}
         
         for idx, row in df_to_display.iterrows():
@@ -59,61 +76,67 @@ def load_objective_test(selected_subject, selected_chapter):
             user_answers[idx] = st.radio(
                 "Choose the correct option:", 
                 options, 
-                key=f"q_{selected_chapter}_{actual_q_no}", 
+                key=f"q_{form_key}_{actual_q_no}", 
                 index=None
             )
             st.markdown("<hr style='margin: 10px 0; border-top: 1px dashed #eee;'>", unsafe_allow_html=True)
             
         submit_btn = st.form_submit_button("✅ Submit Test", type="primary")
         
-        if submit_btn:
-            score = 0
-            questions_in_this_set = len(df_to_display)
+    if submit_btn:
+        score = 0
+        questions_in_this_set = len(df_to_display)
+        
+        # निकालामध्ये सुद्धा टेस्टचा नंबर दाखवणे
+        st.markdown(f"### 📊 Test Results : {test_name}")
+        
+        for idx, row in df_to_display.iterrows():
+            actual_q_no = (set_idx * questions_per_set + idx + 1) if total_questions > questions_per_set else (idx + 1)
+            correct_ans = str(row['Correct Answer (Full Text)']).strip()
+            selected_ans = str(user_answers[idx]).strip() if user_answers[idx] else "Not Selected"
             
-            st.markdown("### 📊 Test Results:")
-            
-            for idx, row in df_to_display.iterrows():
-                actual_q_no = (set_idx * questions_per_set + idx + 1) if total_questions > questions_per_set else (idx + 1)
-                correct_ans = str(row['Correct Answer (Full Text)']).strip()
-                selected_ans = str(user_answers[idx]).strip() if user_answers[idx] else "Not Selected"
-                
-                if selected_ans == correct_ans:
-                    score += 1
-                    st.success(f"✔️ **Q.{actual_q_no}:** Correct Answer! 🎉")
-                else:
-                    st.error(f"❌ **Q.{actual_q_no}:** Incorrect Answer! \n* Your Answer: {selected_ans} \n* Correct Answer: **{correct_ans}**")
-            
-            st.markdown("---")
-            percentage = round((score / questions_in_this_set) * 100, 2)
-            
-            if score == questions_in_this_set:
-                st.balloons() 
-                st.success(f"🏆 **Excellent! Your Final Score: {score} / {questions_in_this_set} ({percentage}%)**")
+            if selected_ans == correct_ans:
+                score += 1
+                st.success(f"✔️ **Q.{actual_q_no}:** Correct Answer! 🎉")
             else:
-                st.info(f"🏆 **Your Final Score: {score} / {questions_in_this_set} ({percentage}%)**")
+                st.error(f"❌ **Q.{actual_q_no}:** Incorrect Answer! \n* Your Answer: {selected_ans} \n* Correct Answer: **{correct_ans}**")
+        
+        st.markdown("---")
+        percentage = round((score / questions_in_this_set) * 100, 2)
+        
+        if score == questions_in_this_set:
+            st.balloons() 
+            st.success(f"🏆 **Excellent! Your Final Score: {score} / {questions_in_this_set} ({percentage}%)**")
+        else:
+            st.info(f"🏆 **Your Final Score: {score} / {questions_in_this_set} ({percentage}%)**")
+            
+        try:
+            results_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'results.csv')
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+            
+            new_report = pd.DataFrame([{
+                "Subject": str(selected_subject),
+                "Chapter": f"{selected_chapter} ({test_name})", # प्रोग्रेसमध्ये टेस्ट नंबर सेव्ह होईल
+                "Score": int(score),
+                "Total": int(questions_in_this_set),
+                "Percentage": float(percentage),
+                "Date": current_time
+            }])
+            
+            if os.path.exists(results_path):
+                res_df = pd.read_csv(results_path)
+                res_df = pd.concat([res_df, new_report], ignore_index=True)
+                res_df.to_csv(results_path, index=False)
+            else:
+                os.makedirs(os.path.dirname(results_path), exist_ok=True)
+                new_report.to_csv(results_path, index=False)
                 
-            # 🔴 मुख्य बदल: विद्यार्थ्यांचे मार्क्स 'data/results.csv' मध्ये सेव्ह करणे
-            try:
-                results_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'results.csv')
-                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-                
-                new_report = pd.DataFrame([{
-                    "Subject": str(selected_subject),
-                    "Chapter": str(selected_chapter),
-                    "Score": int(score),
-                    "Total": int(questions_in_this_set),
-                    "Percentage": float(percentage),
-                    "Date": current_time
-                }])
-                
-                if os.path.exists(results_path):
-                    res_df = pd.read_csv(results_path)
-                    res_df = pd.concat([res_df, new_report], ignore_index=True)
-                    res_df.to_csv(results_path, index=False)
-                else:
-                    os.makedirs(os.path.dirname(results_path), exist_ok=True)
-                    new_report.to_csv(results_path, index=False)
-                    
-                st.toast("📈 Progress saved successfully! Check 'My Progress' tab.", icon="✅")
-            except Exception as e:
-                st.error(f"Could not save progress to file: {e}")
+            st.toast("📈 Progress saved successfully! Check 'My Progress' tab.", icon="✅")
+        except Exception as e:
+            st.error(f"Could not save progress to file: {e}")
+            
+    # 🔴 टेस्ट क्लिअर करण्यासाठी रीटेक बटन (फॉर्मच्या बाहेर)
+    st.write("")
+    if st.button("🔄 Retake / Clear Test", key=f"retake_btn_{selected_chapter}_{set_idx}"):
+        st.session_state[reset_key] += 1
+        st.rerun()
