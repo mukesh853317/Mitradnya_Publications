@@ -121,6 +121,7 @@ def show_admin_panel():
                         a_text += f"              MITRADNYA PUBLICATIONS - ANSWER KEY\n"
                         a_text += f"=================================================================\n\n"
 
+                        # Helper to pull practicals safely
                         def pull_practical(chap, n=1, is_theory=False):
                             cat_filter = 'Short_Notes' if is_theory else 'Exercise_Problems'
                             pool = main_qna_sub[(main_qna_sub['Chapter_Name'] == chap) & (main_qna_sub['Category'] == cat_filter)]
@@ -419,4 +420,4 @@ def show_admin_panel():
             st.markdown("### 🖨️ Custom Paper Preview")
             with st.container(border=True):
                 st.markdown(f"```text\n{st.session_state.c_p_text}\n```")
-            st.download_button("📥 Download Custom Paper (.txt)", data=st.session_state.c_p_text, file_name=f"Custom_Paper_{c_sub}.txt", mime="text/plain", type="primary", use_container_width=True)
+            st.download_button("📥 Download Custom Paper (.txt)", data=st.session_state.c_p_text, file_name=f"Custom_Paper.txt", mime="text/plain", type="primary", use_container_width=True)
