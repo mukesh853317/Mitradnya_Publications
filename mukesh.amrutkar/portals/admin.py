@@ -41,7 +41,14 @@ def create_pdf(text_data):
 def show_admin_panel():
     st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - Paper Generator</h2>", unsafe_allow_html=True)
     st.info("💡 Create fully formatted Question Papers in PDF format. Select the 'Strict Board Paper' tab to generate a perfect 80-marks Maharashtra Board paper with 'OR' options.")
-    
+    # ... (डेटा लोडिंग आणि सिलेक्शन कोड) ...
+
+    # 🔴 इथे चेकबॉक्सेस ॲड करा
+    st.markdown("#### 🎯 प्रश्नांचे प्रकार निवडा:")
+    c1, c2, c3 = st.columns(3)
+    with c1: use_prac = st.checkbox("Practical Problems", value=True)
+    with c2: use_short = st.checkbox("Short Notes", value=True)
+    with c3: use_theory = st.checkbox("Theory Questions", value=True)
     if not FPDF_AVAILABLE:
         st.warning("⚠️ 'fpdf2' library is missing! Papers will be downloaded as TXT. Please add `fpdf2` to your requirements.txt file to enable PDF downloads.")
         
@@ -93,7 +100,7 @@ def show_admin_panel():
             
             if '|' in line:
                 if not in_table:
-                    html += '<table border="1" width="100%" cellpadding="4" style="border-collapse: collapse;">'
+                    html += '<table border="1" width="50%" cellpadding="4" style="border-collapse: collapse;">'
                     in_table = True
                 html += "<tr>"
                 cols = line.split('|')
