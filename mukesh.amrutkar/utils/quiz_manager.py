@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 import os
 import math
+import datetime
 
-def load_objective_test(selected_chapter):
+def load_objective_test(selected_subject, selected_chapter):
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
 
     if not os.path.exists(csv_path):
@@ -21,7 +22,6 @@ def load_objective_test(selected_chapter):
     total_questions = len(df_filtered)
     questions_per_set = 20
 
-    # 🔴 टायटल आधी दाखवा, मग ड्रॉपडाऊन (ज्यामुळे ती रिकामी स्पेस निघून जाईल)
     st.markdown(f"<h3 style='color: #1e3a8a; margin-top: 0;'>🎯 MCQ Practice Test</h3>", unsafe_allow_html=True)
 
     if total_questions > questions_per_set:
@@ -84,8 +84,36 @@ def load_objective_test(selected_chapter):
                     st.error(f"❌ **Q.{actual_q_no}:** Incorrect Answer! \n* Your Answer: {selected_ans} \n* Correct Answer: **{correct_ans}**")
             
             st.markdown("---")
+            percentage = round((score / questions_in_this_set) * 100, 2)
+            
             if score == questions_in_this_set:
                 st.balloons() 
-                st.success(f"🏆 **Excellent! Your Final Score: {score} / {questions_in_this_set}**")
+                st.success(f"🏆 **Excellent! Your Final Score: {score} / {questions_in_this_set} ({percentage}%)**")
             else:
-                st.info(f"🏆 **Your Final Score: {score} / {questions_in_this_set}**")
+                st.info(f"🏆 **Your Final Score: {score} / {questions_in_this_set} ({percentage}%)**")
+                
+            # 🔴 मुख्य बदल: विद्यार्थ्यांचे मार्क्स 'data/results.csv' मध्ये सेव्ह करणे
+            try:
+                results_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'results.csv')
+                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+                
+                new_report = pd.DataFrame([{
+                    "Subject": str(selected_subject),
+                    "Chapter": str(selected_chapter),
+                    "Score": int(score),
+                    "Total": int(questions_in_this_set),
+                    "Percentage": float(percentage),
+                    "Date": current_time
+                }])
+                
+                if os.path.exists(results_path):
+                    res_df = pd.read_csv(results_path)
+                    res_df = pd.concat([res_df, new_report], ignore_index=True)
+                    res_df.to_csv(results_path, index=False)
+                else:
+                    os.makedirs(os.path.dirname(results_path), exist_ok=True)
+                    new_report.to_csv(results_path, index=False)
+                    
+                st.toast("📈 Progress saved successfully! Check 'My Progress' tab.", icon="✅")
+            except Exception as e:
+                st.error(f"Could not save progress to file: {e}")
