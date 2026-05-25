@@ -1,42 +1,61 @@
 import streamlit as st
 import pandas as pd
 import os
+import math
 
 def load_objective_test(selected_chapter):
-    # तुमची Objectives.csv फाईल
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
 
     if not os.path.exists(csv_path):
-        st.warning("⏳ Objective Questions for this chapter will be uploaded soon! (Stay Tuned)")
+        st.warning("⏳ Objective Questions for this chapter will be updated soon! (Stay Tuned)")
         return
 
-    # डेटा लोड करणे
     df = pd.read_csv(csv_path)
     
-    # 🔴 महत्त्वाचा बदल: 'No' कॉलममध्ये चॅप्टरचे नाव/नंबर असल्याने त्यावरून फिल्टर करणे
     df_filtered = df[df['No'].astype(str).str.strip() == str(selected_chapter)].reset_index(drop=True)
 
     if df_filtered.empty:
-        st.info(f"💡 No Objectives Test for this Chapter {selected_chapter} ")
+        st.info(f"💡 Objective test for {selected_chapter} is not available yet.")
         return
 
-    st.markdown(f"<h3 style='color: #1e3a8a;'>🎯 MCQ Practice Test</h3>", unsafe_allow_html=True)
+    total_questions = len(df_filtered)
+    questions_per_set = 20
+
+    if total_questions > questions_per_set:
+        num_sets = math.ceil(total_questions / questions_per_set)
+        
+        set_options = []
+        for i in range(num_sets):
+            start_num = i * questions_per_set + 1
+            end_num = min((i + 1) * questions_per_set, total_questions)
+            set_options.append(f"📝 Test Set {i+1} (Questions {start_num} to {end_num})")
+        
+        selected_set_str = st.selectbox("🎯 Choose Test Set:", set_options)
+        set_idx = set_options.index(selected_set_str)
+        
+        start_idx = set_idx * questions_per_set
+        end_idx = min(start_idx + questions_per_set, total_questions)
+        df_to_display = df_filtered.iloc[start_idx:end_idx].reset_index(drop=True)
+    else:
+        df_to_display = df_filtered
+
+    st.markdown(f"<h3 style='color: #1e3a8a;'>🎯 MCQ Practice Test - {selected_chapter}</h3>", unsafe_allow_html=True)
     
-    # Streamlit Form चा वापर
-    with st.form(key=f"quiz_form_{selected_chapter}"):
+    with st.form(key=f"quiz_form_{selected_chapter}_{set_idx if total_questions > questions_per_set else 0}"):
         user_answers = {}
         
-        for idx, row in df_filtered.iterrows():
-            q_no = idx + 1 # प्रश्नाचा नंबर आपोआप १, २, ३ असा येईल
+        for idx, row in df_to_display.iterrows():
+            actual_q_no = (set_idx * questions_per_set + idx + 1) if total_questions > questions_per_set else (idx + 1)
+            
             q_text = row['Question']
             options = [str(row['Option A']), str(row['Option B']), str(row['Option C']), str(row['Option D'])]
             
-            st.markdown(f"**Q.{q_no} : {q_text}**")
+            st.markdown(f"**Q.{actual_q_no} : {q_text}**")
             
             user_answers[idx] = st.radio(
-                "Choose Right Option:", 
+                "Choose the correct option:", 
                 options, 
-                key=f"q_{selected_chapter}_{q_no}", 
+                key=f"q_{selected_chapter}_{actual_q_no}", 
                 index=None
             )
             st.markdown("<hr style='margin: 15px 0; border-top: 1px dashed #ddd;'>", unsafe_allow_html=True)
@@ -45,23 +64,24 @@ def load_objective_test(selected_chapter):
         
         if submit_btn:
             score = 0
-            total_questions = len(df_filtered)
+            questions_in_this_set = len(df_to_display)
             
-            st.markdown("### 📊 Test Results 📊:")
+            st.markdown("### 📊 Test Results:")
             
-            for idx, row in df_filtered.iterrows():
+            for idx, row in df_to_display.iterrows():
+                actual_q_no = (set_idx * questions_per_set + idx + 1) if total_questions > questions_per_set else (idx + 1)
                 correct_ans = str(row['Correct Answer (Full Text)']).strip()
                 selected_ans = str(user_answers[idx]).strip() if user_answers[idx] else "Not Selected"
                 
                 if selected_ans == correct_ans:
                     score += 1
-                    st.success(f"✔️ **Q.{idx + 1}:** Correct Ans! 🎉")
+                    st.success(f"✔️ **Q.{actual_q_no}:** Correct Answer! 🎉")
                 else:
-                    st.error(f"❌ **Q.{idx + 1}:** Wrong Ans! \n* Your Ans: {selected_ans} \n* Correct Ans: **{correct_ans}**")
+                    st.error(f"❌ **Q.{actual_q_no}:** Incorrect Answer! \n* Your Answer: {selected_ans} \n* Correct Answer: **{correct_ans}**")
             
             st.markdown("---")
-            if score == total_questions:
+            if score == questions_in_this_set:
                 st.balloons() 
-                st.success(f"🏆 **Congratulations! Your Final Score: {score} / {total_questions}**")
+                st.success(f"🏆 **Excellent! Your Final Score: {score} / {questions_in_this_set}**")
             else:
-                st.info(f"🏆 **Your Final Score: {score} / {total_questions}**")
+                st.info(f"🏆 **Your Final Score: {score} / {questions_in_this_set}**")
