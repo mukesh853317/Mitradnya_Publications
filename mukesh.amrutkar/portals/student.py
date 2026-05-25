@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 try:
     from utils import quiz_manager
 except ImportError:
-    pass # जर utils फोल्डर किंवा फाईल नसेल तर एरर येऊ नये म्हणून
+    pass 
 
 # १. तुमची डिझाईन फाईल इथे इम्पोर्ट करा 
 try:
@@ -22,9 +22,8 @@ def show_student_dashboard():
     if 'design_utils' in globals() and hasattr(design_utils, 'apply_premium_design'):
         design_utils.apply_premium_design()
 
-    st.subheader("🎓 Student's Dashboard - Mitradnya Publication 🎓")
+    st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
     
-    # 🔴 API Key एकदाच सेट करा 
     try:
         api_key = st.secrets["GOOGLE_API_KEY"]
         genai.configure(api_key=api_key)
@@ -38,7 +37,7 @@ def show_student_dashboard():
         st.error("⚠️ QnA.csv File Not Found in data folder!")
         return
 
-    # डेटा लोड आणि ग्रुपिंग
+    # डेटा लोड 
     df = pd.read_csv(csv_path)
     
     # ffill च्या आधी प्रश्न वेगळे करणे
@@ -48,7 +47,25 @@ def show_student_dashboard():
     df['Chapter_Name'] = df['Chapter_Name'].ffill()
     df['Category'] = df['Category'].ffill()
 
-    # 🔴 मुख्य ४ टॅब्स 
+    # ==============================================================
+    # 🔴 सर्वात मोठा बदल: 'Global Chapter Selector' (सर्वांत वर)
+    # ==============================================================
+    st.markdown("<h4 style='color: #4b5563; margin-bottom: 5px;'>📚 Select Subject / Chapter:</h4>", unsafe_allow_html=True)
+    
+    # QnA मधून युनिक चॅप्टर्सची लिस्ट काढा
+    chapter_list = df['Chapter_Name'].dropna().astype(str).unique().tolist()
+    
+    if not chapter_list:
+        st.warning("No chapters found in data.")
+        return
+        
+    selected_chapter = st.selectbox("Choose Chapter", chapter_list, label_visibility="collapsed")
+    st.write("---")
+
+    # 🔴 निवडलेल्या चॅप्टरनुसार संपूर्ण डेटा फिल्टर करा
+    df_filtered = df[df['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip()]
+
+    # मुख्य ४ टॅब्स 
     main_tab_names = [
         "📚 Study Room", 
         "📄 Board Papers & Solutions", 
@@ -61,7 +78,6 @@ def show_student_dashboard():
     # 🔴 १. Study Room (यात पहिले ३ टॅब्स येतील)
     # ==========================================
     with main_tabs[0]:
-        st.markdown("<h3 style='color: #1e3a8a;'>📚 Study Room</h3>", unsafe_allow_html=True)
         
         # इथे आपण 'Sub-tabs' (उपटॅब्स) बनवले आहेत
         categories = ["Short_Notes", "Exercise_Problems", "Extra_Practical"]
@@ -71,10 +87,11 @@ def show_student_dashboard():
         for i in range(3):
             with sub_tabs[i]:
                 cat_name = categories[i]
-                cat_df = df[df['Category'].astype(str).str.strip() == cat_name]
+                # इथे आपण df ऐवजी df_filtered वापरला आहे
+                cat_df = df_filtered[df_filtered['Category'].astype(str).str.strip() == cat_name]
                 
                 if cat_df.empty:
-                    st.warning("⏳ Questions for this section will be updated soon! (Stay Tuned)")
+                    st.info(f"💡 No questions found in '{sub_tab_names[i].split(' ', 1)[1]}' for {selected_chapter} yet.")
                     continue
                 
                 grouped = cat_df.groupby('Question_ID')
@@ -94,7 +111,7 @@ def show_student_dashboard():
                             line = str(row.get('Question_Text', '')).strip()
                             ans = str(row.get('Answer_or_Hint', '')).strip()
                             
-                            if ans and ans != "nan" and ans != "Update Soon!!!":
+                            if ans and str(ans).lower() != "nan" and ans != "Update Soon!!!":
                                 answer_text = ans
                             
                             if '|' in line:
@@ -106,7 +123,7 @@ def show_student_dashboard():
                                         html_table += "<tr>"
                                         for col in t_row:
                                             if r_idx == 0:
-                                                html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; '>{col}</th>"
+                                                html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
                                             else:
                                                 html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                         html_table += "</tr>"
@@ -123,12 +140,14 @@ def show_student_dashboard():
                                 html_table += "<tr>"
                                 for col in t_row:
                                     if r_idx == 0:
-                                        html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; '>{col}</th>"
+                                        html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #f2f2f2;'>{col}</th>"
                                     else:
                                         html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
                                 html_table += "</tr>"
                             html_table += "</table>"
                             st.markdown(html_table, unsafe_allow_html=True)
+                        
+                        st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
                         
                         # AI जनरेट सोल्युशन
                         if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
@@ -160,7 +179,7 @@ def show_student_dashboard():
     # 🔴 २. Board Papers & Solutions
     # ==========================================
     with main_tabs[1]:
-        st.markdown("<h3 style='color: #1e3a8a;'>📄 Board Question Papers & Detailed Solutions</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: #1e3a8a;'>📄 Board Question Papers</h3>", unsafe_allow_html=True)
         st.info("💡 Previous years' board question papers and their detailed solutions will be available here soon.")
         
         col1, col2 = st.columns([2, 1])
@@ -169,25 +188,14 @@ def show_student_dashboard():
         with col2:
             st.markdown("<br>", unsafe_allow_html=True)
             st.button("📥 Download PDF", disabled=True) 
-        st.write("---")
 
     # ==========================================
     # 🔴 ३. Objective Test
     # ==========================================
     with main_tabs[2]:
-        st.markdown("<h3 style='color: #1e3a8a;'>🎯 Objective MCQ Tests</h3>", unsafe_allow_html=True)
         if 'quiz_manager' in globals() and hasattr(quiz_manager, 'load_objective_test'):
-            obj_csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
-            if os.path.exists(obj_csv_path):
-                obj_df = pd.read_csv(obj_csv_path)
-                chapter_list = obj_df['No'].astype(str).unique().tolist()
-                
-                selected_chap = st.selectbox("📝 Select Chapter for MCQ Test:", chapter_list)
-                st.write("---")
-                
-                quiz_manager.load_objective_test(selected_chap)
-            else:
-                st.warning("⚠️ Objectives.csv File Not Found in data folder! Please upload the file.")
+            # 🔴 आता आपल्याला इथे परत चॅप्टर सिलेक्ट करायची गरज नाही, वरचाच 'selected_chapter' वापरला आहे
+            quiz_manager.load_objective_test(selected_chapter)
         else:
              st.error("⚠️ quiz_manager.py file not found in utils folder.")
 
