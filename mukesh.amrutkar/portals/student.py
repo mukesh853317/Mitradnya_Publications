@@ -22,7 +22,7 @@ def show_student_dashboard():
     if 'design_utils' in globals() and hasattr(design_utils, 'apply_premium_design'):
         design_utils.apply_premium_design()
 
-    st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
+    st.subheader("🎓 Student's Dashboard - Mitradnya Publication 🎓")
     
     # 🔴 API Key एकदाच सेट करा 
     try:
@@ -77,7 +77,6 @@ def show_student_dashboard():
                     st.warning("⏳ Questions for this section will be updated soon! (Stay Tuned)")
                     continue
                 
-                st.write("---")
                 grouped = cat_df.groupby('Question_ID')
                 
                 for q_idx, (q_id, group) in enumerate(grouped):
