@@ -2,10 +2,11 @@ import streamlit as st
 import pandas as pd
 import os
 import google.generativeai as genai
+import datetime
 
 def show_admin_panel():
-    st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - Paper & Solution Generator</h2>", unsafe_allow_html=True)
-    st.info("💡 Create Test Papers on One Click! Choose the Subject, Lessons, Number of Questions & Generate Paper.")
+    st.markdown("<h2 style='color: #1e3a8a;'>👨‍🏫 Admin Portal - Advanced Board Paper Generator</h2>", unsafe_allow_html=True)
+    st.info("💡 Create question papers with Board Pattern Marks, Date, and Branch. You can also edit the generated paper online before downloading!")
     
     # AI Setup
     try:
@@ -14,24 +15,23 @@ def show_admin_panel():
     except Exception:
         pass
     
-    st.write("---")
-    
-    # 1. डेटा लोड करणे
+        
+    # 1. Load Data
     qna_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
     obj_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Objectives.csv')
     
     if not os.path.exists(qna_path) or not os.path.exists(obj_path):
-        st.error("⚠️ Data files (QnA.csv or Objectives.csv) are missing in the 'data' folder!")
+        st.error("⚠️ QnA.csv or Objectives.csv files not found in the 'data' folder!")
         return
 
     qna_df = pd.read_csv(qna_path)
     obj_df = pd.read_csv(obj_path)
     
-    # QnA मध्ये is_main_question तयार करणे
+    # QnA is_main_question setup
     qna_df['is_main_question'] = qna_df['Chapter_Name'].notna() & (qna_df['Chapter_Name'].astype(str).str.strip() != '')
     qna_df['Question_ID'] = qna_df['is_main_question'].cumsum()
 
-    # डेटा क्लीनिंग
+    # Data Cleaning
     if 'Subject' not in qna_df.columns: qna_df['Subject'] = 'BK'
     if 'Subject' not in obj_df.columns: obj_df['Subject'] = 'BK'
     if 'No' in obj_df.columns: obj_df.rename(columns={'No': 'Chapter_Name'}, inplace=True)
@@ -48,39 +48,49 @@ def show_admin_panel():
 
     all_subjects = list(set(qna_df['Subject'].unique()).union(set(obj_df['Subject'].unique())))
     
-    # 2. पेपर सेटिंग UI
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        selected_subject = st.selectbox("📚 Select Subject:", all_subjects)
-    
+    # 2. Header and Pattern Settings UI
+    st.markdown("#### 📝 1. Header Information")
+    col_h1, col_h2, col_h3 = st.columns(3)
+    with col_h1:
+        selected_subject = st.selectbox("📚 Select Subject:", all_subjects, key="admin_sub_select")
+    with col_h2:
+        branch_name = st.text_input("🏢 Enter Branch Name:", value="Ambernath")
+    with col_h3:
+        exam_date = st.date_input("🗓️ Select Exam Date:", datetime.date.today())
+        
     chap_qna = qna_df[qna_df['Subject'] == selected_subject]['Chapter_Name'].unique().tolist()
     chap_obj = obj_df[obj_df['Subject'] == selected_subject]['Chapter_Name'].unique().tolist()
     all_chapters = list(set(chap_qna).union(set(chap_obj)))
     all_chapters.sort()
+    
+    selected_chapters = st.multiselect("📑 Select Chapters for Test:", all_chapters, default=all_chapters[:1] if all_chapters else None)
 
-    with col2:
-        selected_chapters = st.multiselect("📑 Select Chapters for Test:", all_chapters, default=all_chapters[:1] if all_chapters else None)
-
-    st.markdown("#### ⚙️ Set Paper Pattern")
-    col3, col4 = st.columns(2)
-    with col3:
-        num_mcq = st.number_input("Number of MCQs (1 Mark each):", min_value=0, max_value=50, value=10, step=1)
-    with col4:
-        num_theory = st.number_input("Number of Theory/Practical Questions:", min_value=0, max_value=20, value=5, step=1)
+    st.markdown("#### ⚙️ 2. Board Paper Pattern & Marks Settings")
+    col_p1, col_p2, col_p3 = st.columns(3)
+    with col_p1:
+        num_mcq = st.number_input("Number of MCQs:", min_value=0, max_value=50, value=10, step=1)
+        mcq_marks = st.number_input("Marks per MCQ:", min_value=1, max_value=5, value=1, step=1)
+    with col_p2:
+        num_theory = st.number_input("Number of Practical/Theory Qs:", min_value=0, max_value=20, value=2, step=1)
+        theory_marks = st.number_input("Marks per Practical Q:", min_value=1, max_value=20, value=15, step=1)
+    with col_p3:
+        total_time = st.text_input("Exam Duration (Time):", value="2 Hours")
+        calculated_total = (num_mcq * mcq_marks) + (num_theory * theory_marks)
+        st.markdown(f"<br><h4 style='color: #166534;'>Total Marks: {calculated_total}</h4>", unsafe_allow_html=True)
         
     st.write("---")
     
-    # 3. Session State Initialization
-    if 'paper_generated' not in st.session_state:
-        st.session_state.paper_generated = False
-    
-    # पेपर जनरेट करणे
-    if st.button("🚀 Generate Question Paper & Answer Key", type="primary"):
+    if 'admin_paper_generated' not in st.session_state:
+        st.session_state.admin_paper_generated = False
+        st.session_state.paper_raw_text = ""
+        st.session_state.ans_raw_text = ""
+
+    if st.button("🚀 Generate Board Question Paper", type="primary", key="gen_board_paper_btn"):
         if not selected_chapters:
-            st.warning("⚠️ Please select at least one chapter!")
+            st.warning("⚠️ Please select at Least One Chapter!")
             return
             
-        with st.spinner("⏳ Generating..."):
+        with st.spinner("⏳ Generating Board Pattern Paper..."):
             filtered_obj = obj_df[(obj_df['Subject'] == selected_subject) & (obj_df['Chapter_Name'].isin(selected_chapters))]
             if not filtered_obj.empty:
                 take_mcq = min(num_mcq, len(filtered_obj))
@@ -97,191 +107,104 @@ def show_admin_panel():
             else:
                 final_theory = pd.DataFrame()
 
-            # Save to session state
-            st.session_state.final_mcqs = final_mcqs
-            st.session_state.final_theory = final_theory
-            st.session_state.sel_sub = selected_subject
-            st.session_state.sel_chaps = selected_chapters
-            st.session_state.full_qna_df = qna_df
-            st.session_state.paper_generated = True
+            formatted_date = exam_date.strftime('%d-%m-%Y')
+            
+            p_text = f"========================================\n"
+            p_text += f"        MITRADNYA PUBLICATION'S\n"
+            p_text += f"========================================\n"
+            p_text += f"Branch: {branch_name}          Date: {formatted_date}\n"
+            p_text += f"Subject: {selected_subject}             Time: {total_time}\n"
+            p_text += f"Total Marks: {calculated_total} Marks\n"
+            p_text += f"Chapters: {', '.join(selected_chapters)}\n"
+            p_text += f"----------------------------------------\n\n"
+            
+            if not final_mcqs.empty:
+                p_text += f"Q.1 Choose the correct alternative and rewrite the sentence. [Marks: {num_mcq * mcq_marks}]\n\n"
+                for idx, row in final_mcqs.iterrows():
+                    p_text += f"({idx+1}) {row['Question']}\n"
+                    p_text += f"    A) {row['Option A']}   B) {row['Option B']}   C) {row['Option C']}   D) {row['Option D']}\n\n"
+            
+            if not final_theory.empty:
+                p_text += f"Q.2 Solve the following Practical / Theory problems. [Marks: {num_theory * theory_marks} (Each carries {theory_marks} Marks)]\n\n"
+                for idx, row in final_theory.iterrows():
+                    q_id = row['Question_ID']
+                    group = qna_df[qna_df['Question_ID'] == q_id]
+                    full_q_text = "\n".join([str(r.get('Question_Text', '')).strip() for _, r in group.iterrows() if str(r.get('Question_Text', '')).strip() != 'nan'])
+                    p_text += f"({idx+1}) {full_q_text}\n"
+                    p_text += f"----------------------------------------\n\n"
+
+            a_text = f"========================================\n"
+            a_text += f"    MITRADNYA PUBLICATION'S - ANSWER KEY\n"
+            a_text += f"========================================\n"
+            a_text += f"Subject: {selected_subject} | Date: {formatted_date}\n\n"
+            
+            if not final_mcqs.empty:
+                a_text += f"--- Q.1 MCQ ANSWERS ---\n"
+                for idx, row in final_mcqs.iterrows():
+                    a_text += f"{idx+1}. Correct Answer: {row['Correct Answer (Full Text)']}\n"
+                a_text += f"\n"
+            
+            if not final_theory.empty:
+                a_text += f"--- Q.2 PRACTICAL SOLUTIONS ---\n"
+                for idx, row in final_theory.iterrows():
+                    a_text += f"Question {idx+1} Solution Hint: Refer to Solutions or Textbook Answers.\n\n"
+
+            st.session_state.paper_raw_text = p_text
+            st.session_state.ans_raw_text = a_text
+            st.session_state.admin_paper_generated = True
             st.rerun()
 
-    # ==============================================================
-    # 4. पेपर आणि उत्तरे दाखवणे (Tabs मध्ये)
-    # ==============================================================
-    if st.session_state.paper_generated:
-        out_tabs = st.tabs(["📄 Question Paper", "📝 Answer Key & Solutions"])
+    if st.session_state.admin_paper_generated:
+        st.markdown("### 🛠️ 3. Edit & Download Section")
         
-        final_mcqs = st.session_state.final_mcqs
-        final_theory = st.session_state.final_theory
-        sel_sub = st.session_state.sel_sub
-        sel_chaps = st.session_state.sel_chaps
-        qna_df_full = st.session_state.full_qna_df
+        out_tabs = st.tabs(["📄 Question Paper Portal", "📝 Answer Key Portal"])
         
-        # ----------------------------------------------------
-        # TAB 1: QUESTION PAPER
-        # ----------------------------------------------------
         with out_tabs[0]:
-            st.success("✅ Paper Generated Successfully!")
-            
-            # --- हेडर आणि लोगो ---
-            col_logo, col_title = st.columns([1, 4])
-            with col_logo:
-                logo_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'images', 'logo.png')
-                if os.path.exists(logo_path):
-                    st.image(logo_path, width=100)
-                else:
-                    st.markdown("🏢", unsafe_allow_html=True) # Placeholder icon
-            with col_title:
-                st.markdown("<h2 style='color: #1e3a8a; margin-bottom: 0;'>MITRADNYA PUBLICATION'S</h2>", unsafe_allow_html=True)
-                st.markdown(f"**Subject:** {sel_sub} | **Chapters:** {', '.join(sel_chaps)}")
-            
-            st.markdown("<hr style='border: 2px solid #1e3a8a;'>", unsafe_allow_html=True)
-            
-            # Text file content builder (with proper line breaks)
-            txt_content = "========================================\r\n"
-            txt_content += "        MITRADNYA PUBLICATION'S\r\n"
-            txt_content += "========================================\r\n"
-            txt_content += f"Subject: {sel_sub}\r\n"
-            txt_content += f"Chapters: {', '.join(sel_chaps)}\r\n"
-            txt_content += "----------------------------------------\r\n\r\n"
-
-            with st.container(border=True):
-                # Section A: MCQs
-                if not final_mcqs.empty:
-                    st.markdown("#### Q.1 Choose the correct alternative and rewrite the sentence:")
-                    txt_content += "Q.1 Choose the correct alternative and rewrite the sentence:\r\n\r\n"
-                    
-                    for idx, row in final_mcqs.iterrows():
-                        q_text = f"**{idx+1}.** {row['Question']}"
-                        opts = f"A) {row['Option A']} &nbsp;&nbsp; B) {row['Option B']} &nbsp;&nbsp; C) {row['Option C']} &nbsp;&nbsp; D) {row['Option D']}"
-                        
-                        st.markdown(q_text)
-                        st.markdown(opts, unsafe_allow_html=True)
-                        st.write("")
-                        
-                        txt_content += f"{idx+1}. {row['Question']}\r\n"
-                        txt_content += f"A) {row['Option A']}   B) {row['Option B']}   C) {row['Option C']}   D) {row['Option D']}\r\n\r\n"
-                
-                # Section B: Theory / Practical
-                if not final_theory.empty:
-                    st.markdown("#### Q.2 Solve the following questions:")
-                    txt_content += "Q.2 Solve the following questions:\r\n\r\n"
-                    
-                    for idx, row in final_theory.iterrows():
-                        q_id = row['Question_ID']
-                        group = qna_df_full[qna_df_full['Question_ID'] == q_id]
-                        full_q_text = "\n".join([str(r.get('Question_Text', '')).strip() for _, r in group.iterrows() if str(r.get('Question_Text', '')).strip() != 'nan'])
-                        
-                        st.markdown(f"**{idx+1}.**")
-                        txt_content += f"{idx+1}. "
-                        
-                        # 🔴 टेबल रेंडरिंग लॉजिक (Student Portal सारखे)
-                        table_data = []
-                        for line in full_q_text.split('\n'):
-                            if '|' in line:
-                                table_data.append([col.strip() for col in line.split('|')])
-                                # Text file formatting for tables (simple padding)
-                                txt_content += line.replace('|', ' | ') + "\r\n"
-                            else:
-                                if table_data:
-                                    html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom:10px;'>"
-                                    for r_idx, t_row in enumerate(table_data):
-                                        html_table += "<tr>"
-                                        for col in t_row:
-                                            if r_idx == 0: html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
-                                            else: html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
-                                        html_table += "</tr>"
-                                    html_table += "</table>"
-                                    st.markdown(html_table, unsafe_allow_html=True)
-                                    table_data = []
-                                
-                                if line:
-                                    st.markdown(line)
-                                    txt_content += line + "\r\n"
-                                    
-                        # उरलेला टेबल
-                        if table_data:
-                            html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom:10px;'>"
-                            for r_idx, t_row in enumerate(table_data):
-                                html_table += "<tr>"
-                                for col in t_row:
-                                    if r_idx == 0: html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
-                                    else: html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
-                                html_table += "</tr>"
-                            html_table += "</table>"
-                            st.markdown(html_table, unsafe_allow_html=True)
-                        
-                        st.write("---")
-                        txt_content += "\r\n----------------------------------------\r\n\r\n"
-
-            st.write("")
+            st.success("✅ Board Question Paper generated! You can edit it directly in the box below before downloading.")
+            edited_paper = st.text_area("📝 Edit Question Paper Content Live:", value=st.session_state.paper_raw_text, height=450, key="edit_paper_text_area")
+            st.session_state.paper_raw_text = edited_paper 
+            st.write("---")
             st.download_button(
-                label="📥 Download Paper (.pdf)",
-                data=txt_content,
-                file_name=f"{sel_sub}_Question_Paper.pdf",
+                label="📥 Download Edited Question Paper (.pdf)",
+                data=edited_paper,
+                file_name=f"{selected_subject}_Board_Exam_Paper.pdf",
                 mime="text/plain",
-                type="primary"
+                type="primary",
+                key="dl_edited_paper_btn"
             )
+            st.info("💡 Tip: You can edit or add anything in the box above. The downloaded file will include all your changes!")
 
-        # ----------------------------------------------------
-        # TAB 2: ANSWER KEY & SOLUTIONS
-        # ----------------------------------------------------
         with out_tabs[1]:
-            st.markdown("<h3 style='color: #166534;'>📝 Official Answer Key & Solutions</h3>", unsafe_allow_html=True)
-            
-            ans_content = "========================================\r\n"
-            ans_content += "       ANSWER KEY & SOLUTIONS\r\n"
-            ans_content += "========================================\r\n\r\n"
-
-            with st.container(border=True):
-                if not final_mcqs.empty:
-                    st.markdown("#### Q.1 MCQ Answers:")
-                    ans_content += "Q.1 MCQ Answers:\r\n"
-                    for idx, row in final_mcqs.iterrows():
-                        ans_text = f"**{idx+1}.** {row['Correct Answer (Full Text)']}"
-                        st.success(ans_text)
-                        ans_content += f"{idx+1}. {row['Correct Answer (Full Text)']}\r\n"
-                    st.write("---")
-                    ans_content += "\r\n----------------------------------------\r\n\r\n"
-
-                if not final_theory.empty:
-                    st.markdown("#### Q.2 Practical / Theory Solutions:")
-                    ans_content += "Q.2 Practical / Theory Solutions:\r\n(Refer to AI Generated Solutions for detailed steps)\r\n\r\n"
-                    
-                    for idx, row in final_theory.iterrows():
-                        q_id = row['Question_ID']
-                        group = qna_df_full[qna_df_full['Question_ID'] == q_id]
-                        full_q_text = "\n".join([str(r.get('Question_Text', '')).strip() for _, r in group.iterrows() if str(r.get('Question_Text', '')).strip() != 'nan'])
-                        
-                        with st.expander(f"View Question {idx+1}"):
-                            st.text(full_q_text[:200] + "...")
-                            
-                        # AI Solution Button
-                        if st.button(f"🧠 Generate Solution for Q.{idx+1}", key=f"ai_ans_{q_id}"):
-                            with st.spinner("⏳ Generating Detailed Solution..."):
-                                try:
-                                    model = genai.GenerativeModel('gemini-3.5-flash')
-                                    prompt = f"Solve this accountancy/commerce problem in detail step-by-step for a teacher's answer key. Subject: {sel_sub}.\n\n{full_q_text}"
-                                    response = model.generate_content(prompt, stream=True, request_options={"timeout": 600})
-                                    
-                                    st.markdown(f"**Solution for Q.{idx+1}:**")
-                                    res_box = st.empty()
-                                    full_text = ""
-                                    for chunk in response:
-                                        full_text += chunk.text
-                                        res_box.markdown(full_text + " ▌")
-                                    res_box.markdown(full_text)
-                                except Exception as e:
-                                    st.error(f"AI Error: {e}")
-                                    
-                        st.write("")
-
-            st.write("")
+            st.markdown("#### 📝 Edit Answer Key")
+            edited_ans = st.text_area("📝 Edit Answer Key Live:", value=st.session_state.ans_raw_text, height=300, key="edit_ans_text_area")
+            st.session_state.ans_raw_text = edited_ans
+            st.write("---")
             st.download_button(
-                label="📥 Download Answer Key (.pdf)",
-                data=ans_content,
-                file_name=f"{sel_sub}_Answer_Key.pdf",
+                label="📥 Download Edited Answer Key (.pdf)",
+                data=edited_ans,
+                file_name=f"{selected_subject}_Answer_Key.pdf",
                 mime="text/plain",
-                type="primary"
+                type="primary",
+                key="dl_edited_ans_btn"
             )
+            
+            st.write("---")
+            st.markdown("#### 🧠 Generate Solutions for Paper Reference:")
+            st.info("Use the button below to generate a reference answer key for teachers.")
+            
+            if st.button("🤖 Generate Full Paper Solution via Gemini AI", type="secondary"):
+                with st.spinner("⏳ Gemini AI is solving the entire paper..."):
+                    try:
+                        model = genai.GenerativeModel('gemini-3.5-flash')
+                        prompt = f"Solve this complete commerce question paper step-by-step with accounting formats, adjustments, and explanations for a teacher's answer key:\n\n{st.session_state.paper_raw_text}"
+                        response = model.generate_content(prompt, stream=True, request_options={"timeout": 600})
+                        
+                        st.markdown("### 📝 AI Generated Model Solution:")
+                        res_box = st.empty()
+                        full_text = ""
+                        for chunk in response:
+                            full_text += chunk.text
+                            res_box.markdown(full_text + " ▌")
+                        res_box.markdown(full_text)
+                    except Exception as e:
+                        st.error(f"AI Error: {e}")
