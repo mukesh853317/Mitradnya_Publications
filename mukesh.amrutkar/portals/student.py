@@ -22,7 +22,7 @@ def show_student_dashboard():
     if 'design_utils' in globals() and hasattr(design_utils, 'apply_premium_design'):
         design_utils.apply_premium_design()
 
-    st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
+    st.subheader("🎓 Student's Dashboard - Mitradnya Publication's 🎓")
     
     # API Key एकदाच सेट करा 
     try:
@@ -83,7 +83,6 @@ def show_student_dashboard():
         chapter_list = all_chapters_df[all_chapters_df['Subject'].astype(str) == str(selected_subject)]['Chapter_Name'].dropna().astype(str).unique().tolist()
         selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
         
-  
     df_filtered = df[(df['Subject'].astype(str).str.strip() == str(selected_subject).strip()) & 
                      (df['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip())]
 
@@ -190,30 +189,86 @@ def show_student_dashboard():
                                     st.error(f"AI Error: {e}")
 
     # ==========================================
-    # २. Board Papers & Solutions (Download Button Restored)
+    # 🔴 २. Board Papers & Solutions (प्रीमियम कॉम्बो: Download + Online AI Solutions)
     # ==========================================
     with main_tabs[1]:
-        st.markdown(f"<h3 style='color: #1e3a8a;'>📄 Board Question Papers ({selected_subject})</h3>", unsafe_allow_html=True)
-        st.info("💡 Download previous board papers to practice writing offline.")
+        st.markdown(f"<h3 style='color: #1e3a8a;'>📄 Board Question Papers & Solutions ({selected_subject})</h3>", unsafe_allow_html=True)
+        st.info("💡 You can download the full question paper for offline practice, or click 'Generate Solution' to check answers online immediately.")
         
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            paper_year = st.selectbox("🗓️ Select Exam Year / Exam Paper:", ["March 2024", "July 2023", "March 2023", "March 2022"])
-        with col2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # Dummy PDF logic. In reality, you'd load the file from a 'pdfs' folder.
-            pdf_filename = f"{selected_subject}_Board_Paper_{paper_year.replace(' ', '_')}.pdf"
-            dummy_pdf_data = b"%PDF-1.4\n%Dummy PDF for testing"
-            
-            st.download_button(
-                label="📥 Download PDF",
-                data=dummy_pdf_data, 
-                file_name=pdf_filename,
-                mime="application/pdf",
-                type="primary"
-            )
+        board_csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'Board_Papers.csv')
         
+        if os.path.exists(board_csv_path):
+            bp_df = pd.read_csv(board_csv_path)
+            bp_df_sub = bp_df[bp_df['Subject'].astype(str).str.strip() == str(selected_subject).strip()]
+            
+            if not bp_df_sub.empty:
+                years_list = bp_df_sub['Year'].dropna().astype(str).unique().tolist()
+                
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    selected_year = st.selectbox("🗓️ Select Exam Year / Paper:", years_list, key="board_year_select")
+                with col2:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    pdf_filename = f"{selected_subject}_Board_Paper_{selected_year.replace(' ', '_')}.pdf"
+                    dummy_pdf_data = b"%PDF-1.4\n%Dummy PDF for testing"
+                    st.download_button(
+                        label="📥 Download Full PDF",
+                        data=dummy_pdf_data, 
+                        file_name=pdf_filename,
+                        mime="application/pdf",
+                        type="primary",
+                        key=f"dl_btn_{selected_year}"
+                    )
+                
+                         
+                # निवडलेल्या वर्षाचे सर्व प्रश्न खाली Expanders मध्ये दाखवणे (AI सोल्युशन बटनसह)
+                bp_filtered = bp_df_sub[bp_df_sub['Year'].astype(str).str.strip() == str(selected_year).strip()]
+                
+                for idx, row in bp_filtered.iterrows():
+                    q_no = str(row.get('Question_No', f"{idx+1}"))
+                    q_text = str(row.get('Question_Text', ''))
+                    display_title = q_text[:80] + "..." if len(q_text) > 80 else q_text
+                    
+                    with st.expander(f" Q.{q_no} : {display_title}"):
+                        st.markdown(q_text.replace('\n', '<br>'), unsafe_allow_html=True)
+                        st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
+                        
+                        if st.button("🧠 Generate Solution", key=f"bp_btn_{selected_year}_{idx}", type="primary"):
+                            with st.spinner("⏳ Generating Board Solution..."):
+                                try:
+                                    model = genai.GenerativeModel('gemini-3.5-flash')
+                                    prompt = f"You are an expert commerce teacher for Maharashtra Board. Solve this board exam question in detail, step-by-step for the subject {selected_subject}:\n\n{q_text}"
+                                    
+                                    response = model.generate_content(
+                                        prompt,
+                                        stream=True,
+                                        request_options={"timeout": 600}
+                                    )
+                                    
+                                    st.markdown("### 📝 AI Generated Solution:")
+                                    res_box = st.empty()
+                                    full_text = ""
+                                    for chunk in response:
+                                        full_text += chunk.text
+                                        res_box.markdown(full_text + " ▌")
+                                    res_box.markdown(full_text)
+                                except Exception as e:
+                                    st.error(f"AI Error: {e}")
+            else:
+                st.info(f"💡 No board papers found for {selected_subject} yet.")
+        else:
+            # जर फाईल नसेल तरी डाऊनलोड बटन आणि मेसेज एकत्र दाखवणे
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                paper_year = st.selectbox("🗓️ Select Exam Year / Exam Paper:", ["March 2024", "July 2023", "March 2023", "March 2022"])
+            with col2:
+                st.markdown("<br>", unsafe_allow_html=True)
+                pdf_filename = f"{selected_subject}_Board_Paper_{paper_year.replace(' ', '_')}.pdf"
+                dummy_pdf_data = b"%PDF-1.4\n%Dummy PDF for testing"
+                st.download_button(label="📥 Download PDF", data=dummy_pdf_data, file_name=pdf_filename, mime="application/pdf", type="primary")
+            st.write("---")
+            st.info("💡 **Board Papers List Missing!** To view questions online with 'Generate Solution' buttons, please create a 'Board_Papers.csv' file in your 'data' folder with columns: `Subject`, `Year`, `Question_No`, `Question_Text`.")
+
     # ==========================================
     # ३. Objective Test 
     # ==========================================
