@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import google.generativeai as genai
 import datetime
+import textwrap
 
 try:
     from fpdf import FPDF
@@ -13,18 +14,26 @@ except ImportError:
 def create_pdf(text_data):
     pdf = FPDF()
     pdf.add_page()
-    # 🔴 पीडीएफ मध्ये टेबल्स सरळ येण्यासाठी 'Courier' (Monospaced) फॉन्ट वापरला आहे
     pdf.set_font("Courier", size=9)
+    # ऑटो पेज ब्रेक आणि मार्जिन सेट करणे 
+    pdf.set_auto_page_break(auto=True, margin=15)
     
     clean_text = text_data.encode('latin-1', 'replace').decode('latin-1')
     
     for line in clean_text.split('\n'):
-        try:
-            # 🔴 लांब रेषेमुळे एरर येऊ नये म्हणून error handling
-            pdf.multi_cell(0, 5, txt=line)
-        except Exception:
-            pdf.multi_cell(0, 5, txt=line[:90] + "...")
+        # 🔴 रामबाण उपाय: कोणतीही लांबलचक रेष 80 कॅरेक्टर्स पेक्षा मोठी असल्यास तिला कट करणे
+        wrapped_lines = textwrap.wrap(line, width=80, break_long_words=True, replace_whitespace=False)
+        
+        if not wrapped_lines:
+            pdf.ln(5) # रिकामी ओळ
+            continue
             
+        for w_line in wrapped_lines:
+            try:
+                pdf.multi_cell(0, 5, txt=w_line)
+            except Exception:
+                pass # अत्यंत सेफ फॉलबॅक
+                
     try:
         pdf_bytes = pdf.output(dest="S").encode('latin-1')
     except TypeError:
@@ -75,7 +84,6 @@ def show_admin_panel():
 
     paper_tabs = st.tabs(["🏛️ Strict Board Paper (80 Marks)", "📝 Custom Practice Paper"])
     
-    # 🔴 ही फंक्शन HTML आणि Text दोन्ही फॉर्मेटमध्ये टेबल बनवते
     def get_full_q_both(q_id, df):
         group = df[df['Question_ID'] == q_id]
         html = ""
@@ -425,8 +433,8 @@ def show_admin_panel():
                     st.download_button("📥 Download Answer HTML", data=st.session_state.board_ans_html, file_name=f"Board_80_Ans_Key_{board_sub}.html", mime="text/html", type="secondary", use_container_width=True)
                 
                 st.write("---")
-                if st.button("🤖 Generate Solution for Board Paper", key="ai_board"):
-                    with st.spinner("⏳ Galculating Solutions..."):
+                if st.button("🤖 Generate AI Teacher's Solution for Board Paper", key="ai_board"):
+                    with st.spinner("⏳ AI is calculating solutions..."):
                         try:
                             model = genai.GenerativeModel('gemini-3.5-flash')
                             prompt = f"Provide a complete, step-by-step solution for this board exam paper (Use clean HTML tables for accounts):\n\n{st.session_state.board_paper_html}"
@@ -514,6 +522,7 @@ def show_admin_panel():
 
                     st.session_state.c_p_html = p_html
                     st.session_state.c_p_txt = p_txt
+                    st.session_state.c_a_html = "<h3 align='center'>Answer key will be available soon.</h3>"
                     st.session_state.c_paper_gen = True
                     st.rerun()
 
