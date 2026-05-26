@@ -2,49 +2,47 @@ import streamlit as st
 import pandas as pd
 import os
 import google.generativeai as genai
-from fpdf import FPDF
-# PDF Generator (Error-Free)
-def create_safe_pdf(text_data):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Courier", size=8)
-    for line in text_data.split('\n'):
-        wrapped = textwrap.wrap(line, width=90)
-        for w in wrapped:
-            pdf.cell(0, 5, txt=w, ln=1)
-    return bytes(pdf.output(dest='S'))
 
-# Function to show professional paper
+# Function to clean question text (Removes "Q81:", "Q113:" etc.)
+def clean_question(text):
+    import re
+    # 'Q' नंतर येणारे अंक आणि ':' काढून टाकेल
+    return re.sub(r'Q\d+[:.]\s*', '', str(text))
+
 def show_admin_panel():
     st.markdown("<h2 style='color: #1e3a8a;'>Board Paper Generator</h2>", unsafe_allow_html=True)
     
     qna_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
-    df = pd.read_csv(qna_path)
-
-    # 1. Subject Selection
-    sub = st.selectbox("Select Subject:", df['Subject'].unique())
+    if not os.path.exists(qna_path):
+        st.error("Data file missing!")
+        return
+    df = pd.read_csv(qna_path).astype(str)
     
-    # 2. Section Based Paper Structure
-    if st.button("🚀 Generate Professional Paper"):
-        # Section A: Objective (Q.1)
-        st.markdown("### Q.1 Objective Questions (20 Marks)")
-        # इथे फक्त Objective डेटा फिल्टर करा
+    sub = st.selectbox("Select Subject:", df['Subject'].unique())
+    chaps = st.multiselect("Select Chapters:", df[df['Subject'] == sub]['Chapter_Name'].unique())
+    
+    if st.button("🚀 Generate Clean Professional Paper"):
+        paper = df[(df['Subject'] == sub) & (df['Chapter_Name'].isin(chaps))]
         
-        # Section B: Practical (Q.2 onwards)
-        st.markdown("### Q.2 Solve Practical Problems (10 Marks)")
-        
-        # इथे आपण i+1 ऐवजी फिक्स Q नंबर वापरू
-        paper = df[df['Subject'] == sub].sample(5) 
-        
-        for idx, row in enumerate(paper.iterrows()):
-            # इथे row['Question_Text'] प्रिंट करा
-            st.markdown(f"**Q.{idx+2}:** {row[1]['Question_Text']}")
+        if not paper.empty:
+            tab1, tab2 = st.tabs(["📄 Board Paper", "✅ AI Solution"])
             
-            # AI Button (Solution Tab)
-            with st.expander(f"View Solution for Q.{idx+2}"):
-                if st.button(f"Generate Solution", key=f"sol_{idx}"):
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-                    res = model.generate_content(f"Solve this accounting problem professionally: {row[1]['Question_Text']}")
-                    st.info(res.text)
+            with tab1:
+                st.markdown("### 📄 Professional Paper")
+                for i, row in paper.iterrows():
+                    # इथे आपण क्लीन केलेला प्रश्न दाखवतोय
+                    clean_q = clean_question(row['Question_Text'])
+                    st.markdown(f"**Q.{i+1}.** {clean_q}")
+                    st.write("---")
+            
+            with tab2:
+                st.markdown("### Generate Solutions")
+                if st.button("Generate Solution for Paper"):
+                    with st.spinner("Generating..."):
+                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        res = model.generate_content(f"Solve these accounting problems: {paper['Question_Text'].to_list()}")
+                        st.markdown(res.text)
+        else:
+            st.warning("No questions found!")
 
 show_admin_panel()
