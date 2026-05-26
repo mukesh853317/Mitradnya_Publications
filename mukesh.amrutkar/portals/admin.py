@@ -6,19 +6,19 @@ import datetime
 import textwrap
 from fpdf import FPDF
 
-# 1. FIXED PDF GENERATOR (Error-Free)
+# PDF Generator Function (Optimized for 80 Marks Board Pattern)
 def create_pdf(text_data):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Courier", size=8) # फॉन्ट साईज कमी केली जेणेकरून टेबल बसेल
-    
-    # मजकूर ९० विड्थमध्ये रॅप केला
-    for line in text_data.split('\n'):
-        wrapped_lines = textwrap.wrap(line, width=90, break_long_words=True)
+    pdf.set_font("Courier", size=9)
+    pdf.set_auto_page_break(auto=True, margin=15)
+    clean_text = text_data.encode('latin-1', 'replace').decode('latin-1')
+    for line in clean_text.split('\n'):
+        wrapped_lines = textwrap.wrap(line, width=80, break_long_words=True, replace_whitespace=False)
         for w_line in wrapped_lines:
-            pdf.cell(0, 5, txt=w_line, ln=1)
-    
-    return bytes(pdf.output(dest='S'))
+            pdf.multi_cell(0, 5, txt=w_line)
+    out = pdf.output()
+    return out.encode('latin-1') if isinstance(out, str) else bytes(out)
 
 def show_admin_panel():
     st.markdown("<h2 style='color: #1e3a8a;'>🏛️ 3.1 PRO - Board Paper Generator</h2>", unsafe_allow_html=True)
@@ -30,53 +30,53 @@ def show_admin_panel():
     
     # Load Data
     qna_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
-    if not os.path.exists(qna_path):
-        st.error("Data file missing!")
-        return
-    qna_df = pd.read_csv(qna_path).astype(str)
+    qna_df = pd.read_csv(qna_path).astype(str).apply(lambda x: x.str.strip())
+    all_subjects = qna_df['Subject'].unique().tolist()
     
-    # Tabs
-    tab1, tab2 = st.tabs(["🏛️ Strict Board Paper", "📝 Custom Practice"])
+    # Tabs: Strict Board Paper vs Custom
+    tab1, tab2 = st.tabs(["🏛️ Strict Board Pattern", "📝 Custom Practice"])
     
+    # Custom Practice Tab logic with Checkboxes
     with tab2:
-        st.markdown("### 📝 Custom Paper Generator")
-        c_sub = st.selectbox("Select Subject:", qna_df['Subject'].unique(), key="c_sub")
-        c_chaps = st.multiselect("Select Chapters:", qna_df[qna_df['Subject'] == c_sub]['Chapter_Name'].unique(), key="c_chaps")
+        c_sub = st.selectbox("Select Subject:", all_subjects, key="c_sub")
+        c_chaps = st.multiselect("Select Chapters:", sorted(qna_df[qna_df['Subject'] == c_sub]['Chapter_Name'].unique().tolist()), key="c_chaps")
         
-        # Checkboxes for Question Types
         st.markdown("##### Select Question Types:")
-        col_c1, col_c2, col_c3 = st.columns(3)
-        with col_c1: prac = st.checkbox("Practical", True)
-        with col_c2: short = st.checkbox("Short Notes", True)
-        with col_c3: theory = st.checkbox("Theory", True)
+        c1, c2, c3 = st.columns(3)
+        with c1: use_prac = st.checkbox("Practical Problems", value=True)
+        with c2: use_short = st.checkbox("Short Notes", value=True)
+        with c3: use_theory = st.checkbox("Theory Questions", value=True)
         
         if st.button("🚀 Generate Custom Paper"):
-            # Filter Logic
             cats = []
-            if prac: cats.append('Exercise_Problems')
-            if short: cats.append('Short_Notes')
-            if theory: cats.append('One_Sentence')
+            if use_prac: cats.append('Exercise_Problems')
+            if use_short: cats.append('Short_Notes')
+            if use_theory: cats.append('One_Sentence')
             
             paper = qna_df[(qna_df['Subject'] == c_sub) & (qna_df['Chapter_Name'].isin(c_chaps)) & (qna_df['Category'].isin(cats))]
             
-            if not paper.empty:
-                paper_txt = "MITRADNYA PUBLICATIONS - PAPER\n============================\n\n"
+            if paper.empty:
+                st.warning("No questions found!")
+            else:
+                st.success(f"Generated {len(paper)} questions.")
+                
+                # Professional Preview
+                paper_txt = "PROFESSIONAL PAPER\n\n"
+                ans_txt = "GENERATED ANSWERS\n\n"
                 
                 for i, row in paper.iterrows():
                     st.write(f"**Q{i+1}:** {row['Question_Text']}")
                     paper_txt += f"Q{i+1}: {row['Question_Text']}\n\n"
                     
-                    # AI Solution Tab
-                    with st.expander(f"🤖 Generate AI Solution for Q{i+1}"):
-                        if st.button(f"Generate", key=f"ai_{i}"):
-                            with st.spinner("AI solving..."):
-                                model = genai.GenerativeModel('gemini-1.5-flash')
-                                res = model.generate_content(f"Solve this: {row['Question_Text']}")
-                                st.info(res.text)
+                    if st.button(f"Get Solution for Q{i+1}", key=f"ai_{i}"):
+                        model = genai.GenerativeModel('gemini-2.5-flash')
+                        res = model.generate_content(f"Solve: {row['Question_Text']}")
+                        st.info(f"Ans: {res.text}")
+                        ans_txt += f"Ans {i+1}: {res.text}\n\n"
                 
-                # Download Button
-                st.download_button("📥 Download PDF Paper", data=create_pdf(paper_txt), file_name="Paper.pdf", mime="application/pdf")
-            else:
-                st.warning("No questions found!")
+                col_d1, col_d2 = st.columns(2)
+                with col_d1: st.download_button("📥 PDF Paper", data=create_pdf(paper_txt), file_name="Paper.pdf", mime="application/pdf")
+                with col_d2: st.download_button("📥 PDF Answers", data=create_pdf(ans_txt), file_name="Answers.pdf", mime="application/pdf")
 
+# Run
 show_admin_panel()
