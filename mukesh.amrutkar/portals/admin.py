@@ -1,48 +1,74 @@
-import streamlit as st
 import pandas as pd
-import os
-import google.generativeai as genai
+import random
+from fpdf import FPDF
 
-# Function to clean question text (Removes "Q81:", "Q113:" etc.)
-def clean_question(text):
-    import re
-    # 'Q' नंतर येणारे अंक आणि ':' काढून टाकेल
-    return re.sub(r'Q\d+[:.]\s*', '', str(text))
+# CSV फाईल्स लोड करा
+qna_file = "QnA.csv"          # Descriptive / Practical Problems
+mcq_file = "All in one.csv"   # MCQ Questions with answers
 
-def show_admin_panel():
-    st.markdown("<h2 style='color: #1e3a8a;'>🏛️ 3.1 PRO - Board Paper Generator</h2>", unsafe_allow_html=True)
-    
-    qna_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
-    if not os.path.exists(qna_path):
-        st.error("Data file missing!")
-        return
-    df = pd.read_csv(qna_path).astype(str)
-    
-    sub = st.selectbox("Select Subject:", df['Subject'].unique())
-    chaps = st.multiselect("Select Chapters:", df[df['Subject'] == sub]['Chapter_Name'].unique())
-    
-    if st.button("🚀 Generate Clean Professional Paper"):
-        paper = df[(df['Subject'] == sub) & (df['Chapter_Name'].isin(chaps))]
-        
-        if not paper.empty:
-            tab1, tab2 = st.tabs(["📄 Board Paper", "✅ AI Solution"])
-            
-            with tab1:
-                st.markdown("### 📄 Professional Paper")
-                for i, row in paper.iterrows():
-                    # इथे आपण क्लीन केलेला प्रश्न दाखवतोय
-                    clean_q = clean_question(row['Question_Text'])
-                    st.markdown(f"**Q.{i+1}.** {clean_q}")
-                    st.write("---")
-            
-            with tab2:
-                st.markdown("### 🤖 AI Solutions")
-                if st.button("Generate Solution for Paper"):
-                    with st.spinner("AI is working..."):
-                        model = genai.GenerativeModel('gemini-1.5-flash')
-                        res = model.generate_content(f"Solve these accounting problems: {paper['Question_Text'].to_list()}")
-                        st.markdown(res.text)
-        else:
-            st.warning("No questions found!")
+qna_df = pd.read_csv(qna_file)
+mcq_df = pd.read_csv(mcq_file)
 
-show_admin_panel()
+def generate_descriptive_questions(df, chapters, num_questions=2):
+    paper = []
+    for chapter in chapters:
+        chapter_questions = df[df['Chapter_Name'].str.contains(chapter, na=False)]
+        if not chapter_questions.empty:
+            selected = chapter_questions.sample(min(num_questions, len(chapter_questions)))
+            for _, row in selected.iterrows():
+                paper.append({
+                    "question": row['Question_Text'],
+                    "answer": row['Answer_or_Hint'] if 'Answer_or_Hint' in row and pd.notna(row['Answer_or_Hint']) else "Solution to be written"
+                })
+    return paper
+
+def generate_mcq_questions(df, chapters, num_questions=2):
+    paper = []
+    for chapter in chapters:
+        chapter_questions = df[df['Chapter'].str.contains(chapter, na=False)]
+        if not chapter_questions.empty:
+            selected = chapter_questions.sample(min(num_questions, len(chapter_questions)))
+            for _, row in selected.iterrows():
+                q = f"{row['Question']}\nA) {row['Option A']}\nB) {row['Option B']}\nC) {row['Option C']}\nD) {row['Option D']}"
+                paper.append({
+                    "question": q,
+                    "answer": row['Correct Answer (Full Text)']
+                })
+    return paper
+
+def export_to_pdf(descriptive, mcq, filename="Question_Paper.pdf"):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+
+    pdf.cell(200, 10, txt="HSC Accountancy Question Paper", ln=True, align='C')
+    pdf.ln(10)
+
+    # Descriptive Questions
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(200, 10, txt="Descriptive Questions", ln=True)
+    pdf.set_font("Arial", size=11)
+    for i, item in enumerate(descriptive, 1):
+        pdf.multi_cell(0, 10, f"Q{i}. {item['question']}")
+        pdf.multi_cell(0, 10, f"Answer Key: {item['answer']}")
+        pdf.ln(5)
+
+    # MCQ Questions
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(200, 10, txt="MCQ Questions", ln=True)
+    pdf.set_font("Arial", size=11)
+    for i, item in enumerate(mcq, 1):
+        pdf.multi_cell(0, 10, f"Q{i}. {item['question']}")
+        pdf.multi_cell(0, 10, f"Answer Key: {item['answer']}")
+        pdf.ln(5)
+
+    pdf.output(filename)
+    print(f"PDF generated successfully: {filename}")
+
+# वापर
+selected_chapters = ["Partnership Final Accounts"]  # हव्या त्या chapters निवडा
+
+descriptive_part = generate_descriptive_questions(qna_df, selected_chapters, num_questions=2)
+mcq_part = generate_mcq_questions(mcq_df, selected_chapters, num_questions=3)
+
+export_to_pdf(descriptive_part, mcq_part, filename="HSC_Accountancy_Paper.pdf")
