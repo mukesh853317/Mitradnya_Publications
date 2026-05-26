@@ -10,7 +10,7 @@ def clean_question(text):
     return re.sub(r'Q\d+[:.]\s*', '', str(text))
 
 def show_admin_panel():
-    st.markdown("<h2 style='color: #1e3a8a;'>Board Paper Generator</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #1e3a8a;'>🏛️ 3.1 PRO - Board Paper Generator</h2>", unsafe_allow_html=True)
     
     qna_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
     if not os.path.exists(qna_path):
@@ -36,9 +36,9 @@ def show_admin_panel():
                     st.write("---")
             
             with tab2:
-                st.markdown("### Generate Solutions")
+                st.markdown("### 🤖 AI Solutions")
                 if st.button("Generate Solution for Paper"):
-                    with st.spinner("Generating..."):
+                    with st.spinner("AI is working..."):
                         model = genai.GenerativeModel('gemini-1.5-flash')
                         res = model.generate_content(f"Solve these accounting problems: {paper['Question_Text'].to_list()}")
                         st.markdown(res.text)
