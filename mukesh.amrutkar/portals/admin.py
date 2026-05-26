@@ -2,25 +2,22 @@ import pandas as pd
 import random
 from fpdf import FPDF
 
-# CSV फाईल्स लोड करताना encoding specify करा
-qna_file = "QnA.csv"
-mcq_file = "All in one.csv"
-
-# try multiple encodings
+# CSV फाईल्स लोड करताना encoding handle करा
 def load_csv(file_path):
     for enc in ["utf-8", "utf-8-sig", "latin1", "cp1252"]:
         try:
             return pd.read_csv(file_path, encoding=enc)
         except UnicodeDecodeError:
             continue
-    raise ValueError(f"Could not decode {file_path} with common encodings")
+    raise ValueError(f"Could not decode {file_path}")
 
-qna_df = load_csv(qna_file)
-mcq_df = load_csv(mcq_file)
+qna_df = load_csv("QnA.csv")          # Descriptive / Practical Problems
+mcq_df = load_csv("All in one.csv")   # MCQ Questions with answers
 
 def generate_descriptive_questions(df, chapters, num_questions=2):
     paper = []
     for chapter in chapters:
+        # QnA.csv मध्ये Chapter_Name आहे
         chapter_questions = df[df['Chapter_Name'].str.contains(chapter, na=False)]
         if not chapter_questions.empty:
             selected = chapter_questions.sample(min(num_questions, len(chapter_questions)))
@@ -34,7 +31,8 @@ def generate_descriptive_questions(df, chapters, num_questions=2):
 def generate_mcq_questions(df, chapters, num_questions=2):
     paper = []
     for chapter in chapters:
-        chapter_questions = df[df['Chapter'].str.contains(chapter, na=False)]
+        # All in one.csv मध्ये Chapter नाव नाही, Subject आहे
+        chapter_questions = df[df['Subject'].str.contains("BK", na=False) & df['Question'].notna()]
         if not chapter_questions.empty:
             selected = chapter_questions.sample(min(num_questions, len(chapter_questions)))
             for _, row in selected.iterrows():
