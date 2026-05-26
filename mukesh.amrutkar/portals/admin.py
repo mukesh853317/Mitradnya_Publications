@@ -4,6 +4,7 @@ import os
 import google.generativeai as genai
 import datetime
 import textwrap
+from fpdf import FPDF
 
 try:
     from fpdf import FPDF
@@ -11,11 +12,17 @@ try:
 except ImportError:
     FPDF_AVAILABLE = False
 
-def create_pdf(text_data):
+# फिक्स: PDF जनरेटरला क्रॅश होण्यापासून वाचवण्यासाठी
+def create_safe_pdf(text_data):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Courier", size=9)
-    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_font("Arial", size=10)
+    # मजकूर लहान तुकड्यांत विभागून PDF मध्ये टाकला आहे
+    for line in text_data.split('\n'):
+        wrapped = textwrap.wrap(line, width=70) # width कमी केल्याने एरर येणार नाही
+        for w in wrapped:
+            pdf.cell(0, 7, txt=w, ln=1)
+    return bytes(pdf.output(dest='S'))
     
     clean_text = text_data.encode('latin-1', 'replace').decode('latin-1')
     
