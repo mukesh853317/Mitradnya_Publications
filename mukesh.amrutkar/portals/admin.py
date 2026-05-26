@@ -2,12 +2,21 @@ import pandas as pd
 import random
 from fpdf import FPDF
 
-# CSV फाईल्स लोड करा
-qna_file = "QnA.csv"          # Descriptive / Practical Problems
-mcq_file = "All in one.csv"   # MCQ Questions with answers
+# CSV फाईल्स लोड करताना encoding specify करा
+qna_file = "QnA.csv"
+mcq_file = "All in one.csv"
 
-qna_df = pd.read_csv(qna_file)
-mcq_df = pd.read_csv(mcq_file)
+# try multiple encodings
+def load_csv(file_path):
+    for enc in ["utf-8", "utf-8-sig", "latin1", "cp1252"]:
+        try:
+            return pd.read_csv(file_path, encoding=enc)
+        except UnicodeDecodeError:
+            continue
+    raise ValueError(f"Could not decode {file_path} with common encodings")
+
+qna_df = load_csv(qna_file)
+mcq_df = load_csv(mcq_file)
 
 def generate_descriptive_questions(df, chapters, num_questions=2):
     paper = []
@@ -66,7 +75,7 @@ def export_to_pdf(descriptive, mcq, filename="Question_Paper.pdf"):
     print(f"PDF generated successfully: {filename}")
 
 # वापर
-selected_chapters = ["Partnership Final Accounts"]  # हव्या त्या chapters निवडा
+selected_chapters = ["Partnership Final Accounts"]
 
 descriptive_part = generate_descriptive_questions(qna_df, selected_chapters, num_questions=2)
 mcq_part = generate_mcq_questions(mcq_df, selected_chapters, num_questions=3)
