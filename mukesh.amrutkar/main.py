@@ -3,12 +3,14 @@ from portals import admin, student
 
 def main():
     st.sidebar.title("Navigation")
-    portal = st.sidebar.radio("Go to:", ["Student Portal", "Admin Portal"])
+    portal = st.sidebar.radio("Go to:", ["Student Portal", "Admin Portal", "Parent Portal"])
     
     if portal == "Student Portal":
         student.show_student_dashboard()
     else:
         admin.show_admin_panel()
+    elif role == "Parent":
+    parent.show_parent_dashboard()
 
 if __name__ == "__main__":
     main()
