@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 def show_student_dashboard():
-    st.subheader("📚 Study Room - Mitradnya Publication")
+    st.subheader("📚 Study Room - Mitradnya Publication's")
     # फाईल लोड करणे
     try:
         df = pd.read_csv('data/QnA.csv')
