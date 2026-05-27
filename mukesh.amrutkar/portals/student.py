@@ -14,6 +14,20 @@ def show_student_dashboard():
         subject = st.selectbox("Select Subject", df['Subject'].unique())
         chapter = st.selectbox("Select Chapter", df[df['Subject'] == subject]['Chapter_Name'].unique())
         # टेबल दाखवणे
+        def render_table_data(answer_text):
+            """जर डेटामध्ये टेबल असेल तर ते HTML मध्ये रेंडर करण्याचे फंक्शन"""
+            if '|' in answer_text:
+        lines = answer_text.split('\n')
+        table_data = [line.split('|') for line in lines if '|' in line]
+        if table_data:
+            # HTML टेबल तयार करणे
+            html = "<table style='width:100%; border: 1px solid #ddd; border-collapse: collapse;'>"
+            for row in table_data:
+                html += "<tr>" + "".join([f"<td style='border: 1px solid #ddd; padding: 5px;'>{col.strip()}</td>" for col in row]) + "</tr>"
+            html += "</table>"
+            st.markdown(html, unsafe_allow_html=True)
+    else:
+        st.write(answer_text)
         filtered_df = df[(df['Subject'] == subject) & (df['Chapter_Name'] == chapter)]
         # डेटा नीट दिसण्यासाठी टेबल फॉरमॅट
         st.write(f"### {chapter} चे प्रश्न:")
