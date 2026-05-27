@@ -18,12 +18,11 @@ except ImportError:
     pass 
 
 def show_student_dashboard():
-# २. डिझाईन लागू करा 
-if 'design_utils' in globals() and hasattr(design_utils, 'apply_premium_design'):
-design_utils.apply_premium_design()
-
-    st.subheader("🎓 Student's Dashboard - Mitradnya Publication's 🎓")
-    st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
+    # २. डिझाईन लागू करा 
+    if 'design_utils' in globals() and hasattr(design_utils, 'apply_premium_design'):
+        design_utils.apply_premium_design()
+        st.subheader("🎓 Student's Dashboard - Mitradnya Publication's 🎓")
+        st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
 
 # API Key एकदाच सेट करा 
 try:
