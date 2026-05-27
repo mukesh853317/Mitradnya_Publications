@@ -7,9 +7,9 @@ import sys
 # नवीन लिंक ॲड करा (utils फोल्डरमधून quiz_manager फाईल आणण्यासाठी)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 try:
-from utils import quiz_manager
+    from utils import quiz_manager
 except ImportError:
-pass 
+    pass 
 
 # १. तुमची डिझाईन फाईल इथे इम्पोर्ट करा 
 try:
