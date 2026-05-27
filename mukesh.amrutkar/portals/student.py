@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import os
 
+st.title("🎓 Student Portal")
+    st.info("Portal is working successfully!")
 def show_student_dashboard():
     st.subheader("📚 Study Room - Mitradnya Publication's")
     
@@ -49,5 +51,4 @@ def show_student_dashboard():
     except Exception as e:
         st.error(f"डेटा लोड करताना अडचण आली: {e}")
 
-    st.title("🎓 Student Portal")
-    st.info("Portal is working successfully!")
+    
