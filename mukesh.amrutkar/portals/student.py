@@ -35,7 +35,6 @@ def show_student_dashboard():
 df_filtered = df[(df['Subject'].astype(str).str.strip() == str(selected_subject).strip()) & 
 (df['Chapter_Name'].astype(str).str.strip() == str(selected_chapter).strip())]
 
-@@ -98,8 +100,9 @@
 # १. Study Room 
 # ==========================================
 with main_tabs[0]:
@@ -47,7 +46,7 @@ with main_tabs[0]:
 sub_tabs = st.tabs(sub_tab_names)
 
 for i in range(len(categories)):
-@@ -118,7 +121,7 @@
+
 main_title = str(first_row.get('Question_Text', ''))
 display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
 
@@ -56,7 +55,7 @@ display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
 table_data = []
 answer_text = ""
 
-@@ -131,27 +134,32 @@
+
 if ans and str(ans).lower() != "nan" and ans != "Update Soon!!!":
 answer_text = ans
 
@@ -108,7 +107,6 @@ if line:
 html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom:10px;'>"
 for r_idx, t_row in enumerate(table_data):
 html_table += "<tr>"
-@@ -166,7 +174,6 @@
 
 st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
 
@@ -116,7 +114,7 @@ st.markdown("<hr style='margin: 10px 0;'>", unsafe_allow_html=True)
 if cat_name != "IMP_Proforma":
 if st.button("🧠 Generate Solution", key=f"btn_{cat_name}_{q_idx}", type="primary"):
 if answer_text:
-@@ -175,8 +182,17 @@
+
 with st.spinner("⏳ Generating Solutions..."):
 try:
 model = genai.GenerativeModel('gemini-3.5-flash') 
@@ -135,7 +133,7 @@ response = model.generate_content(
 stream=True,
 request_options={"timeout": 600}
 )
-@@ -222,28 +238,28 @@
+
 key=f"dl_btn_{selected_year}"
 )
 
