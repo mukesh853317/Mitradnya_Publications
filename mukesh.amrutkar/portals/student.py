@@ -14,6 +14,23 @@ except ImportError:
 def show_student_dashboard():
     st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
 
+    csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'QnA.csv')
+    
+    # १. फाईल वाचताना रिकाम्या ओळी (blank lines) काढून टाका
+    df = pd.read_csv(csv_path)
+    df.columns = df.columns.str.strip()
+    
+    # २. 'Subject' कॉलम नसेल तर तो बनवण्याचे लॉजिक (Forward Fill)
+    # यामुळे जिथे जिथे सब्जेक्ट रिकामी आहे, तिथे आधीचा सब्जेक्ट आपोआप येईल
+    df['Subject'] = df['Subject'].ffill() 
+    df['Chapter_Name'] = df['Chapter_Name'].ffill()
+    
+    # ३. जिथे Subject किंवा Chapter_Name रिकामे आहेत, त्या ओळी काढून टाका
+    df = df.dropna(subset=['Subject', 'Chapter_Name'])
+
+    # आता तुमचे फिल्टर व्यवस्थित चालतील
+    subject_list = df['Subject'].unique().tolist()
+
     # API Configuration
     try:
         genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
