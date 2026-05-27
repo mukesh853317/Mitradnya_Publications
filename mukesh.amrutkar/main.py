@@ -17,13 +17,14 @@ def main():
         
         if role == "Admin":
             admin.show_admin_panel()
-        elif role == "Student":
-            try:
+        if role == "Student":
+            # फाईल अस्तित्वात आहे का हे चेक करा
+            if os.path.exists(csv_path):
                 student.show_student_dashboard()
-            except Exception as e:
-                st.error(f"स्टुडंट पोर्टल लोड करताना एरर: {e}")
-        elif role == "Parent":
-            parent.show_parent_dashboard()
+            else:
+                st.error("डेटा फाईल सापडत नाहीये! कृपया 'data' फोल्डर चेक करा.")
+            elif role == "Parent":
+                parent.show_parent_dashboard()
             
         # ४. लॉगआउट बटण
         if st.sidebar.button("Logout"):
