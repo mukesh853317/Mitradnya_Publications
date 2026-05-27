@@ -1,6 +1,12 @@
 import streamlit as st
 from utils import auth
-from portals import student, admin, parent
+# main.py मधील सुधारित भाग
+try:
+    from portals import student, admin, parent
+except Exception as e:
+    st.error(f"पोर्टल लोड करताना एरर आला: {e}")
+
+# आता ही खात्री करा की तुमची admin.py फाईल रिकामी आहे किंवा त्यात कोणताही सिंटॅक्स एरर नाही.
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
