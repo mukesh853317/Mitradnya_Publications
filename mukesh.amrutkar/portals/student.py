@@ -25,7 +25,7 @@ def show_student_dashboard():
         st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
 
 # API Key एकदाच सेट करा 
-    try:
+try:
     @@ -83,6 +83,8 @@
     chapter_list = all_chapters_df[all_chapters_df['Subject'].astype(str) == str(selected_subject)]['Chapter_Name'].dropna().astype(str).unique().tolist()
     selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
