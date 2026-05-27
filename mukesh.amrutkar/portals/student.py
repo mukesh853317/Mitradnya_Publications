@@ -25,11 +25,11 @@ def show_student_dashboard():
         st.subheader("🎓 Student's Dashboard - Mitradnya Publication")
 
 # API Key एकदाच सेट करा 
-try:
-    @@ -83,6 +83,8 @@
+# योग्य पद्धतीने धडे फिल्टर करणे
     chapter_list = all_chapters_df[all_chapters_df['Subject'].astype(str) == str(selected_subject)]['Chapter_Name'].dropna().astype(str).unique().tolist()
-    selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
-
+    
+    # इथे कोणतीही ड्युप्लिकेट की (key) नाही याची खात्री केली आहे
+    selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select_student")
     
     # 🔴 इथे धड्यानुसार डेटा अचूक फिल्टर होतो (त्यामुळे धडे मिक्स होत नाहीत)
 df_filtered = df[(df['Subject'].astype(str).str.strip() == str(selected_subject).strip()) & 
