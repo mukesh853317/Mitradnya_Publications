@@ -8,11 +8,11 @@ def show_student_dashboard():
     st.subheader("📚 Study Room - Mitradnya Publication's")
     
     # पाथ (Path) सेट करणे
-    csv_path = 'data/QnA.csv'
+    csv_path = 'mukesh.amrutkar/data/QnA.csv'
     
     # फाईल लोड करणे
     try:
-        df = pd.read_csv('mukesh.amrutkar/data/QnA.csv')
+        df = pd.read_csv('csv_path')
         df.columns = df.columns.str.strip() # स्पेस काढणे
         
         # रिकाम्या ओळी काढून टाकणे (KeyError टाळण्यासाठी)
@@ -28,11 +28,12 @@ def show_student_dashboard():
         st.write(f"### {chapter} चे प्रश्न:")
         
         # टेबल स्वरूपात दाखवणे
-        st.dataframe(
-            filtered_df[['Category', 'Question_Text', 'Answer_or_Hint']], 
-            use_container_width=True,
-            hide_index=True
-        )
+    for idx, row in filtered_df.iterrows():
+        with st.expander(f"📖 {row['Category']} - {row['Question_Text'][:50]}..."):
+            st.markdown("**प्रश्न:** " + str(row['Question_Text']))
+            st.markdown("**उत्तर:** " + str(row['Answer_or_Hint']))
+            st.divider()
+    
 
         # फंक्शन व्याख्या
         def render_table_data(answer_text):
