@@ -10,7 +10,7 @@ def show_student_dashboard():
     
     # फाईल लोड करणे
     try:
-        df = pd.read_csv(csv_path)
+        df = pd.read_csv('mukesh.amrutkar/data/QnA.csv')
         df.columns = df.columns.str.strip() # स्पेस काढणे
         
         # रिकाम्या ओळी काढून टाकणे (KeyError टाळण्यासाठी)
