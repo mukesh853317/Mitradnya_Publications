@@ -52,10 +52,9 @@ for i in range(len(categories)):
         with st.expander(f" {display_title}"):
             table_data = []
             answer_text = ""
-
-
-if ans and str(ans).lower() != "nan" and ans != "Update Soon!!!":
-answer_text = ans
+            
+            if ans and str(ans).lower() != "nan" and ans != "Update Soon!!!":
+                answer_text = ans
 
                             if '|' in line:
                                 table_data.append([col.strip() for col in line.split('|')])
