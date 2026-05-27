@@ -124,15 +124,7 @@ try:
                                         else:
                                             ai_prompt = f"You are an expert Commerce teacher. Solve this practical accountancy problem in detail step-by-step:\n\n{q_text}"
                                             
-response = model.generate_content(
-                                            f"Solve this accountancy problem in detail step-by-step:\n\n{q_text}", 
-                                            ai_prompt, 
-stream=True,
-request_options={"timeout": 600}
-)
-
-key=f"dl_btn_{selected_year}"
-)
+response = model.generate_content(f"Solve this accountancy problem in detail step-by-step:\n\n{q_text}", ai_prompt, stream=True, request_options={"timeout": 600}) key=f"dl_btn_{selected_year}")
 
                  
                                
