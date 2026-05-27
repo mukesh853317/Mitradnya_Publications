@@ -13,9 +13,9 @@ except ImportError:
 
 # १. तुमची डिझाईन फाईल इथे इम्पोर्ट करा 
 try:
-import design_utils
+    import design_utils
 except ImportError:
-pass 
+    pass 
 
 def show_student_dashboard():
 # २. डिझाईन लागू करा 
@@ -27,9 +27,9 @@ design_utils.apply_premium_design()
 
 # API Key एकदाच सेट करा 
 try:
-@@ -83,6 +83,8 @@
-chapter_list = all_chapters_df[all_chapters_df['Subject'].astype(str) == str(selected_subject)]['Chapter_Name'].dropna().astype(str).unique().tolist()
-selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
+    @@ -83,6 +83,8 @@
+    chapter_list = all_chapters_df[all_chapters_df['Subject'].astype(str) == str(selected_subject)]['Chapter_Name'].dropna().astype(str).unique().tolist()
+    selected_chapter = st.selectbox("Select Chapter", chapter_list, key="global_chapter_select")
 
     
     # 🔴 इथे धड्यानुसार डेटा अचूक फिल्टर होतो (त्यामुळे धडे मिक्स होत नाहीत)
