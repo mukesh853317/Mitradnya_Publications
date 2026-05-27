@@ -75,7 +75,7 @@ for i in range(len(categories)):
                                 
                             # 🔴 Short_Notes आणि One_Sentence ला टेबलमध्ये न टाकता थेट टेक्स्टमध्ये दाखवा
                             if cat_name in ["Short_Notes", "One_Sentence"]:
-if line:
+                                if line:
                                     st.markdown(line)
                                     st.markdown(f"{line}")
                             else:
