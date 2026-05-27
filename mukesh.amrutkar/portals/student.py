@@ -1,11 +1,14 @@
 import streamlit as st
 import pandas as pd
+import os
 
 def show_student_dashboard():
     st.subheader("📚 Study Room - Mitradnya Publication's")
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    csv_path = os.path.join(base_path, 'data', 'QnA.csv')    
     # फाईल लोड करणे
     try:
-        df = pd.read_csv('data/QnA.csv')
+        df = pd.read_csv('mukesh.amrutkar/data/QnA.csv)
         df.columns = df.columns.str.strip() # स्पेस काढणे
         # फिल्टरिंग
         subject = st.selectbox("Select Subject", df['Subject'].unique())
