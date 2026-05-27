@@ -48,9 +48,8 @@ sub_tabs = st.tabs(sub_tab_names)
 for i in range(len(categories)):
     main_title = str(first_row.get('Question_Text', ''))
     display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
-
-                    with st.expander(f" {display_title}"): # Removed Q. Prefix for cleaner look, optional based on choice
-                    with st.expander(f" {display_title}"):
+    with st.expander(f" {display_title}"): # Removed Q. Prefix for cleaner look, optional based on choice
+        with st.expander(f" {display_title}"):
 table_data = []
 answer_text = ""
 
