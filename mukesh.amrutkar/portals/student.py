@@ -46,9 +46,8 @@ with main_tabs[0]:
 sub_tabs = st.tabs(sub_tab_names)
 
 for i in range(len(categories)):
-
-main_title = str(first_row.get('Question_Text', ''))
-display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
+    main_title = str(first_row.get('Question_Text', ''))
+    display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
 
                     with st.expander(f" {display_title}"): # Removed Q. Prefix for cleaner look, optional based on choice
                     with st.expander(f" {display_title}"):
@@ -117,7 +116,7 @@ if answer_text:
 
 with st.spinner("⏳ Generating Solutions..."):
 try:
-model = genai.GenerativeModel('gemini-3.5-flash') 
+    model = genai.GenerativeModel('gemini-3.5-flash') 
                                         
                                         # 🔴 मुख्य बदल: AI Prompt कॅटेगरीनुसार बदलणार!
                                         if cat_name == "Short_Notes":
