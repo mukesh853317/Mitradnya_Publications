@@ -1,5 +1,5 @@
 import streamlit as st
-df = pd.read_csv(csv_path).dropna(subset=['Subject'])
+
 
 def show_student_dashboard():
     st.title("🎓 Student Portal")
