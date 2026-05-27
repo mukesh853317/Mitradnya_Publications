@@ -55,20 +55,20 @@ for i in range(len(categories)):
             
             if ans and str(ans).lower() != "nan" and ans != "Update Soon!!!":
                 answer_text = ans
-
-                            if '|' in line:
-                                table_data.append([col.strip() for col in line.split('|')])
-                            else:
-                                if table_data:
-                                    html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom:10px;'>"
-                                    for r_idx, t_row in enumerate(table_data):
-                                        html_table += "<tr>"
-                                        for col in t_row:
-                                            if r_idx == 0:
-                                                html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
-                                            else:
-                                                html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
-                                        html_table += "</tr>"
+                
+                if '|' in line:
+                    table_data.append([col.strip() for col in line.split('|')])
+                else:
+                    if table_data:
+                        html_table = "<table style='width:100%; border-collapse: collapse; border: 1px solid #ddd; margin-bottom:10px;'>"
+                        for r_idx, t_row in enumerate(table_data):
+                            html_table += "<tr>"
+                            for col in t_row:
+                                if r_idx == 0:
+                                    html_table += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{col}</th>"
+                                else:
+                                    html_table += f"<td style='border: 1px solid #ddd; padding: 8px;'>{col}</td>"
+                                    html_table += "</tr>"
                                     html_table += "</table>"
                                     st.markdown(html_table, unsafe_allow_html=True)
                                     table_data = []
