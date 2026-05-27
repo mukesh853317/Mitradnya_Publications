@@ -7,24 +7,27 @@ def main():
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
 
-    # २. लॉगिन नाही तर लॉगिन पेज दाखवा
+    # २. लॉगिन नसेल तर लॉगिन पेज दाखवा
     if not st.session_state.logged_in:
         auth.show_login()
+    
+    # ३. लॉगिन असेल तर खालील पोर्टल दाखवा
     else:
-        # ३. लॉगिन असेल तर रोलनुसार पोर्टल लोड करा
         st.sidebar.success(f"Welcome, {st.session_state.get('username', 'User')}!")
         role = st.session_state.get("role", "Student")
         
+        # आता इथे आपण सर्व पोर्टल्स 'elif' ने लावले आहेत
         if role == "Admin":
             admin.show_admin_panel()
-        if role == "Student":
-            # फाईल अस्तित्वात आहे का हे चेक करा
-            if os.path.exists(csv_path):
+        elif role == "Student":
+            try:
                 student.show_student_dashboard()
-            else:
-                st.error("डेटा फाईल सापडत नाहीये! कृपया 'data' फोल्डर चेक करा.")
-            elif role == "Parent":
-                parent.show_parent_dashboard()
+            except Exception as e:
+                st.error(f"स्टुडंट पोर्टल तांत्रिक एरर: {e}")
+        elif role == "Parent":
+            parent.show_parent_dashboard()
+        else:
+            st.warning("Invalid Role!")
             
         # ४. लॉगआउट बटण
         if st.sidebar.button("Logout"):
