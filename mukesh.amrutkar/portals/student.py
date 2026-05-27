@@ -23,7 +23,7 @@ def show_student_dashboard():
     # २. 'Subject' कॉलम नसेल तर तो बनवण्याचे लॉजिक (Forward Fill)
     # यामुळे जिथे जिथे सब्जेक्ट रिकामी आहे, तिथे आधीचा सब्जेक्ट आपोआप येईल
     df['Subject'] = df['Subject'].ffill() 
-    df['Chapter_Name'] = df['Chapter_Name'].ffill()
+    df['Chapter_Name'] = df['Chapter_Name'].notna()
     
     # ३. जिथे Subject किंवा Chapter_Name रिकामे आहेत, त्या ओळी काढून टाका
     df = df.dropna(subset=['Subject', 'Chapter_Name'])
