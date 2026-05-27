@@ -9,7 +9,7 @@ def main():
         student.show_student_dashboard()
     else:
         admin.show_admin_panel()
-    elif role == "Parent":
+    else role == "Parent":
     parent.show_parent_dashboard()
 
 if __name__ == "__main__":
