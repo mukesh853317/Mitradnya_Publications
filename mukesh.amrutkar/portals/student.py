@@ -50,8 +50,8 @@ for i in range(len(categories)):
     display_title = main_title[:80] + "..." if len(main_title) > 80 else main_title
     with st.expander(f" {display_title}"): # Removed Q. Prefix for cleaner look, optional based on choice
         with st.expander(f" {display_title}"):
-table_data = []
-answer_text = ""
+            table_data = []
+            answer_text = ""
 
 
 if ans and str(ans).lower() != "nan" and ans != "Update Soon!!!":
