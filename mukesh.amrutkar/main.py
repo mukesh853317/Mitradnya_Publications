@@ -7,10 +7,14 @@ def main():
     
     if portal == "Student Portal":
         student.show_student_dashboard()
+    elif role == "Parent Portal":
+        parent.show_parent_dashboard()
     else:
         admin.show_admin_panel()
-    elif role == "Parent Portal":
-    parent.show_parent_dashboard()
-
+    
+# लॉगआउट बटण शेवटी
+        if st.sidebar.button("Logout"):
+            st.session_state.logged_in = False
+            st.rerun()
 if __name__ == "__main__":
     main()
